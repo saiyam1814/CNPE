@@ -17,8 +17,31 @@ fi
 
 kubectl create namespace edge-web --dry-run=client -o yaml | kubectl apply -f -
 
-# The frontend. CPU requests are set - the HPA percentage math needs them.
+# The frontend: burns CPU on every request so the HPA has something to react to.
+# CPU requests are set - the HPA percentage math needs them.
 cat <<'EOF' | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: storefront-src
+  namespace: edge-web
+data:
+  app.py: |
+    import http.server
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            # simulate rendering work (~CPU burst per request)
+            total = sum(i * i for i in range(300000))
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK %d\n" % (total % 97))
+
+        def log_message(self, *a):
+            pass
+
+    http.server.ThreadingHTTPServer(("", 80), H).serve_forever()
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,14 +61,22 @@ spec:
     spec:
       containers:
         - name: web
-          image: registry.k8s.io/hpa-example
+          image: python:3.12-alpine
+          command: ["python", "/src/app.py"]
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: src
+              mountPath: /src
           resources:
             requests:
               cpu: 100m
             limits:
               cpu: 300m
+      volumes:
+        - name: src
+          configMap:
+            name: storefront-src
 ---
 apiVersion: v1
 kind: Service

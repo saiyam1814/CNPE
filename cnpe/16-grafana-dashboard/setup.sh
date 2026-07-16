@@ -73,6 +73,45 @@ spec:
       targetPort: 9090
 ---
 # An app that exposes http_requests_total, plus a traffic generator
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-shop-src
+  namespace: obs
+data:
+  app.py: |
+    import http.server
+
+    counts = {"/": 0, "/checkout": 0, "/err": 0}
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/metrics":
+                body = "# HELP http_requests_total Total HTTP requests\n"
+                body += "# TYPE http_requests_total counter\n"
+                for path, c in counts.items():
+                    code = "500" if path == "/err" else "200"
+                    body += 'http_requests_total{code="%s",handler="%s",service="web-shop"} %d\n' % (code, path, c)
+                data = body.encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            if self.path in counts:
+                counts[self.path] += 1
+                self.send_response(500 if self.path == "/err" else 200)
+                self.end_headers()
+                self.wfile.write(b"ok\n")
+                return
+            self.send_response(404)
+            self.end_headers()
+
+        def log_message(self, *a):
+            pass
+
+    http.server.ThreadingHTTPServer(("", 8080), H).serve_forever()
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,9 +131,17 @@ spec:
     spec:
       containers:
         - name: app
-          image: quay.io/brancz/prometheus-example-app:v0.5.0
+          image: python:3.12-alpine
+          command: ["python", "/src/app.py"]
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: src
+              mountPath: /src
+      volumes:
+        - name: src
+          configMap:
+            name: web-shop-src
 ---
 apiVersion: v1
 kind: Service
@@ -119,7 +166,7 @@ spec:
       image: curlimages/curl:8.9.1
       command: ["/bin/sh", "-c"]
       args:
-        - while true; do curl -s http://web-shop.obs.svc:8080/ >/dev/null; curl -s http://web-shop.obs.svc:8080/err >/dev/null; sleep 1; done
+        - while true; do curl -s http://web-shop.obs.svc:8080/ >/dev/null; curl -s http://web-shop.obs.svc:8080/checkout >/dev/null; curl -s http://web-shop.obs.svc:8080/err >/dev/null; sleep 1; done
 EOF
 
 # --- Grafana (ns: monitoring) ---------------------------------------------------

@@ -35,9 +35,9 @@ spec:
     spec:
       containers:
         - name: catalog
-          image: argoproj/rollouts-demo:blue
+          image: nginx:1.25
           ports:
-            - containerPort: 8080
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -50,7 +50,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 8080
+      targetPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -63,7 +63,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 8080
+      targetPort: 80
 EOF
 
 kubectl -n shop-core rollout status deploy/catalog --timeout=300s || true

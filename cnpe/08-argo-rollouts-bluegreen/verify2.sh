@@ -1,7 +1,7 @@
 #!/bin/bash
 # Rollout on green, healthy, promoted
 IMG=$(kubectl -n shop-core get rollout catalog -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null)
-[ "$IMG" = "argoproj/rollouts-demo:green" ] || exit 1
+[ "$IMG" = "nginx:1.26" ] || exit 1
 [ "$(kubectl -n shop-core get rollout catalog -o jsonpath='{.status.phase}')" = "Healthy" ] || exit 1
 
 STABLE=$(kubectl -n shop-core get rollout catalog -o jsonpath='{.status.stableRS}')

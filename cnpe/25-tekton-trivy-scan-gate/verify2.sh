@@ -12,7 +12,7 @@ for pr in prs:
     for c in pr.get("status", {}).get("conditions", []):
         if c.get("type") == "Succeeded":
             succeeded = (c.get("status") == "True")
-    if img == "python:3.4-alpine" and succeeded is False:
+    if img == "nginx:1.16" and succeeded is False:
         failed_bad = True
     if img == "gcr.io/distroless/static:nonroot" and succeeded is True:
         ok_good = True

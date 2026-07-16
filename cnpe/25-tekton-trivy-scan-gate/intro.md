@@ -16,7 +16,7 @@ between them. Compliance noticed.
    - After `image`, **before** `deploy` (deploy must `runAfter` the scan)
    - Scanning `$(tasks.image.results.image-url)`
 3. Prove the gate:
-   - Run with **`python:3.4-alpine`** (ancient, CRITICAL CVEs) → PipelineRun **fails**,
+   - Run with **`nginx:1.16`** (from 2019 - full of CRITICAL CVEs) → PipelineRun **fails**,
      nothing deployed
    - Run with **`gcr.io/distroless/static:nonroot`** → **succeeds**, deploy runs
 

@@ -46,9 +46,9 @@ spec:
     spec:
       containers:
         - name: catalog
-          image: argoproj/rollouts-demo:blue
+          image: nginx:1.25
           ports:
-            - containerPort: 8080
+            - containerPort: 80
 EOF
 ```{{exec}}
 

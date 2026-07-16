@@ -5,7 +5,7 @@
 
 ```bash
 tkn pipeline start build-ship -n ci-otter \
-  -p image=python:3.4-alpine --showlog
+  -p image=nginx:1.16 --showlog
 ```{{exec}}
 
 Expected ending: the scan step prints a wall of CRITICAL CVEs and the PipelineRun
