@@ -88,8 +88,7 @@ The script refuses to run if the target repo ever gains a root `structure.json`
 picks up the push and updates the live course within a minute or two.
 
 (The root `structure.json` in *this* repo only matters if you ever link this repo to a
-Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `testing/`
-and `testing/`.)
+Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `testing/`.)
 
 ---
 
