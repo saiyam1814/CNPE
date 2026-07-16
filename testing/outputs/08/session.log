@@ -1,0 +1,40 @@
+
+$ kubectl -n shop-core get deploy,svc,pods
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/catalog   2/2     2            2           1s
+
+NAME                      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/catalog-active    ClusterIP   10.96.243.254   <none>        80/TCP    1s
+service/catalog-preview   ClusterIP   10.96.139.143   <none>        80/TCP    1s
+
+NAME                           READY   STATUS    RESTARTS   AGE
+pod/catalog-574996f885-2rbvj   1/1     Running   0          1s
+pod/catalog-574996f885-wxv5n   1/1     Running   0          1s
+
+$ kubectl apply -f bluegreen-rollout.yaml
+rollout.argoproj.io/catalog created
+waiting for rollout Healthy...
+
+$ kubectl argo rollouts get rollout catalog -n shop-core
+Name:            catalog
+Namespace:       shop-core
+Status:          ✔ Healthy
+Strategy:        BlueGreen
+Images:          nginx:1.25 (stable, active)
+Replicas:
+  Desired:       2
+  Current:       2
+  Updated:       2
+  Ready:         2
+  Available:     2
+
+NAME                                 KIND        STATUS     AGE  INFO
+⟳ catalog                            Rollout     ✔ Healthy  6s   
+└──# revision:1                                                  
+   └──⧉ catalog-745fb6cf75           ReplicaSet  ✔ Healthy  6s   stable,active
+      ├──□ catalog-745fb6cf75-6rpcg  Pod         ✔ Running  6s   ready:1/1
+      └──□ catalog-745fb6cf75-rlmmc  Pod         ✔ Running  6s   ready:1/1
+
+$ kubectl argo rollouts set image catalog catalog=nginx:1.26 -n shop-core
+rollout "catalog" image updated
+waiting for Paused (preview up, human gate)...

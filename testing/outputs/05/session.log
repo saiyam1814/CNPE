@@ -1,0 +1,49 @@
+
+$ kubectl get deploy -A | grep -E 'NAMESPACE|alpha|beta|gamma'
+NAMESPACE            NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+alpha-svc            api-alpha                       1/1     1            1           9m44s
+beta-svc             api-beta                        2/2     2            2           9m44s
+gamma-svc            api-gamma                       3/3     3            3           9m44s
+waiting for opencost allocation data...
+
+$ curl -s 'http://localhost:9003/allocation/compute?window=10m&aggregate=namespace' | (parse totals)
+alpha-svc    totalCost=0.000070
+beta-svc     totalCost=0.000560
+gamma-svc    totalCost=0.002530
+
+$ kubectl cost namespace --service-name opencost --service-port 9003 -N opencost --window 10m
+Error: failed to query allocation API: failed to port forward query: received non-200 status code 404 and data: 404 page not found
+
+Usage:
+  cost namespace [flags]
+
+Aliases:
+  namespace, ns
+
+Flags:
+      --allocation-path string         URL path at which Allocation queries can be served from the configured service. If using OpenCost, you may want to set this to '/allocation/compute' (default "/model/allocation")
+      --as string                      Username to impersonate for the operation. User could be a regular user or a service account in a namespace.
+      --as-group stringArray           Group to impersonate for the operation, this flag can be repeated to specify multiple groups.
+      --as-uid string                  UID to impersonate for the operation.
+      --cache-dir string               Default cache directory (default "/Users/saiyam/.kube/cache")
+
+$ echo api-alpha > /Users/saiyam/cheapest.txt
+
+$ echo api-gamma > /Users/saiyam/expensive.txt
+
+$ kubectl -n alpha-svc scale deploy api-alpha --replicas=$(( $(kubectl -n alpha-svc get deploy api-alpha -o jsonpath='{.spec.replicas}') + 2 ))
+deployment.apps/api-alpha scaled
+
+$ kubectl -n gamma-svc scale deploy api-gamma --replicas=2
+deployment.apps/api-gamma scaled
+
+$ kubectl -n alpha-svc label deploy api-alpha cost.platform.io/adjusted=yes
+deployment.apps/api-alpha labeled
+
+$ kubectl -n gamma-svc label deploy api-gamma cost.platform.io/adjusted=yes
+deployment.apps/api-gamma labeled
+
+$ kubectl get deploy -A -l cost.platform.io/adjusted=yes
+NAMESPACE   NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+alpha-svc   api-alpha   1/3     3            1           9m50s
+gamma-svc   api-gamma   2/2     2            2           9m50s

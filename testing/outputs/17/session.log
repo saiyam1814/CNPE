@@ -14,3 +14,27 @@ $ curl -s http://localhost:9090/api/v1/rules | (show rule states)
 FrontendHighErrorRate  state=unknown
 
 $ # live error ratio (the lab generates ~8% errors)
+error ratio: NaN
+waiting for the alert to reach pending/firing...
+
+$ curl -s http://localhost:9090/api/v1/alerts
+{
+    "status": "success",
+    "data": {
+        "alerts": [
+            {
+                "labels": {
+                    "alertname": "FrontendHighErrorRate",
+                    "severity": "warning"
+                },
+                "annotations": {
+                    "description": "Error ratio is 8.421%",
+                    "summary": "Frontend 5xx ratio above 5%"
+                },
+                "state": "pending",
+                "activeAt": "2026-07-16T12:03:43.9435369Z",
+                "value": "8.421052631578947e-02"
+            }
+        ]
+    }
+}

@@ -20,7 +20,9 @@ helm upgrade --install prometheus prometheus-community/prometheus \
 
 # --- OpenCost ----------------------------------------------------------------
 kubectl create namespace opencost --dry-run=client -o yaml | kubectl apply -f -
-curl -sL https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/opencost.yaml -o /tmp/opencost.yaml
+# pinned: kubernetes/opencost.yaml was removed from the develop branch (Helm-only now);
+# v1.117.0 is the last release tag that still ships the standalone manifest
+curl -sL https://raw.githubusercontent.com/opencost/opencost/v1.117.0/kubernetes/opencost.yaml -o /tmp/opencost.yaml
 kubectl apply --namespace opencost -f /tmp/opencost.yaml
 
 # --- kubectl-cost plugin -------------------------------------------------------

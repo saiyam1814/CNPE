@@ -1,0 +1,35 @@
+
+$ kubectl -n argocd get pods
+NAME                                                READY   STATUS    RESTARTS   AGE
+argocd-application-controller-0                     1/1     Running   0          51s
+argocd-applicationset-controller-5b57d746cf-qpk6h   1/1     Running   0          51s
+argocd-dex-server-fc9788c8c-86nzh                   1/1     Running   0          51s
+argocd-notifications-controller-58cccc8f9b-kcc5r    1/1     Running   0          51s
+argocd-redis-695ddfbbc4-kkv8j                       1/1     Running   0          51s
+argocd-repo-server-f597c6bd5-kl6lx                  1/1     Running   0          51s
+argocd-server-697b79d9c5-vpcdx                      1/1     Running   0          51s
+
+$ kubectl apply -f podinfo-application.yaml
+application.argoproj.io/podinfo-ui created
+waiting for Synced + Healthy...
+
+$ kubectl -n argocd get application podinfo-ui
+NAME         SYNC STATUS   HEALTH STATUS
+podinfo-ui   Synced        Healthy
+
+$ kubectl -n apps-ui get deploy,svc,pods
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/podinfo-ui   2/2     2            2           26s
+
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+service/podinfo-ui   ClusterIP   10.96.111.211   <none>        9898/TCP,9999/TCP   26s
+
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/podinfo-ui-7579d8b76c-6v72d   1/1     Running   0          26s
+pod/podinfo-ui-7579d8b76c-k7l79   1/1     Running   0          26s
+
+$ kubectl -n apps-ui get deploy podinfo-ui -o jsonpath='{.spec.replicas}'
+2
+
+$ kubectl -n apps-ui get deploy podinfo-ui -o jsonpath="{.spec.template.spec.containers[0].env[?(@.name=='PODINFO_UI_COLOR')].value}"
+#336699

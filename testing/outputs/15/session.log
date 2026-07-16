@@ -1,0 +1,34 @@
+$ kubectl apply -f xrd.yaml
+compositeresourcedefinition.apiextensions.crossplane.io/xbucketapps.platform.example.io created
+waiting for Established + Offered...
+
+$ kubectl get xrd xbucketapps.platform.example.io
+NAME                              ESTABLISHED   OFFERED   AGE
+xbucketapps.platform.example.io   True          True      4s
+
+$ kubectl api-resources --api-group=platform.example.io
+NAME          SHORTNAMES   APIVERSION                     NAMESPACED   KIND
+bucketapps                 platform.example.io/v1alpha1   true         BucketApp
+xbucketapps                platform.example.io/v1alpha1   false        XBucketApp
+
+$ kubectl apply -f composition.yaml
+composition.apiextensions.crossplane.io/xbucketapp-objects created
+
+$ kubectl apply -f claim.yaml
+bucketapp.platform.example.io/media-assets created
+waiting for the claim to be Ready...
+
+$ kubectl -n team-apps get bucketapp
+NAME           SYNCED   READY   CONNECTION-SECRET   AGE
+media-assets   True     True                        6s
+
+$ kubectl get xbucketapp
+NAME                 SYNCED   READY   COMPOSITION          AGE
+media-assets-8dm6n   True     True    xbucketapp-objects   6s
+
+$ kubectl -n bucket-system get cm -l platform.example.io/kind=bucket
+NAME                 DATA   AGE
+media-assets-8dm6n   2      6s
+
+$ kubectl -n bucket-system get cm -l platform.example.io/kind=bucket -o jsonpath='{.items[0].data}'
+{"region":"eu-west-1","size":"small"}

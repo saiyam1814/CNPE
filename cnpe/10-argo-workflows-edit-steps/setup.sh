@@ -121,9 +121,8 @@ spec:
     - name: deploy
       container:
         image: rancher/kubectl:v1.28.0
-        command: [sh, -c]
-        args:
-          - kubectl -n stage-coral rollout restart deploy/checkout-api
+        command: [kubectl]
+        args: [-n, stage-coral, rollout, restart, deploy/checkout-api]
 
     - name: test
       container:

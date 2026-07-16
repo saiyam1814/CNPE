@@ -1,0 +1,33 @@
+waiting for the app to boot (it pip-installs otel packages first)...
+
+$ kubectl -n trace-lab logs deploy/span-switch --tail=3
+[notice] A new release of pip is available: 25.0.1 -> 26.1.2
+[notice] To update, run: pip install --upgrade pip
+tracing DISABLED (need TRACING_ENABLED=1 and OTEL_EXPORTER_OTLP_ENDPOINT)
+
+$ kubectl -n trace-lab set env deploy/span-switch TRACING_ENABLED=1 OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector.observability.svc:4318
+deployment.apps/span-switch env updated
+
+$ kubectl -n trace-lab rollout status deploy/span-switch --timeout=300s
+Waiting for deployment "span-switch" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "span-switch" rollout to finish: 1 old replicas are pending termination...
+deployment "span-switch" successfully rolled out
+waiting for the old pod to terminate and the new one to boot...
+
+$ kubectl -n trace-lab logs deploy/span-switch --tail=3
+[notice] A new release of pip is available: 25.0.1 -> 26.1.2
+[notice] To update, run: pip install --upgrade pip
+tracing ENABLED, exporting OTLP to http://jaeger-collector.observability.svc:4318
+waiting for span-switch to appear in Jaeger...
+
+$ curl -s http://localhost:16686/api/services
+{"data":["span-switch"],"total":1,"limit":0,"offset":0,"errors":null}
+waiting for an error trace...
+
+$ # extract exception.message from the error span
+connection refused to payment-svc:8080
+
+$ cat > /root/exception.json
+
+$ cat /Users/saiyam/exception.json
+{"key": "exception.message", "type": "string", "value": "connection refused to payment-svc:8080"}

@@ -1,0 +1,42 @@
+
+$ kubectl get providers
+NAME                  INSTALLED   HEALTHY   PACKAGE                                                             AGE
+provider-kubernetes   True        True      xpkg.crossplane.io/crossplane-contrib/provider-kubernetes:v0.18.0   23s
+
+$ kubectl get xrd
+NAME                         ESTABLISHED   OFFERED   AGE
+xwebapps.platform.acme.dev                           0s
+
+$ vim /root/composition.yaml   # complete the five TODO patches, then apply
+patches completed
+
+$ kubectl apply -f /Users/saiyam/composition.yaml
+composition.apiextensions.crossplane.io/xwebapp-kubernetes created
+
+$ kubectl apply -f /Users/saiyam/app-xr.yaml
+xwebapp.platform.acme.dev/demo-site created
+waiting for the XR to become Ready...
+
+$ kubectl get xwebapp demo-site
+NAME        SYNCED   READY   COMPOSITION          AGE
+demo-site   True     True    xwebapp-kubernetes   7s
+
+$ kubectl get objects.kubernetes.crossplane.io
+NAME              KIND         PROVIDERCONFIG   SYNCED   READY   AGE
+demo-site-h45bs   Service      default          True     True    6s
+demo-site-l5mjq   Deployment   default          True     True    6s
+
+$ kubectl -n compose-sandbox get deploy,svc
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/demo-site   0/2     2            0           6s
+
+NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/demo-site   ClusterIP   10.96.150.34   <none>        80/TCP    6s
+
+$ kubectl -n compose-sandbox rollout status deploy/demo-site --timeout=120s
+Waiting for deployment "demo-site" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "demo-site" rollout to finish: 1 of 2 updated replicas are available...
+deployment "demo-site" successfully rolled out
+
+$ kubectl -n compose-sandbox get deploy demo-site -o jsonpath='replicas={.spec.replicas} image={.spec.template.spec.containers[0].image}'
+replicas=2 image=nginx:1.25

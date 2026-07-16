@@ -2,11 +2,15 @@
 source "$(dirname "$0")/../lib.sh"
 set -e
 
+echo "waiting for the app to boot (it pip-installs otel packages first)..."
+retry 30 5 'kubectl -n trace-lab logs deploy/span-switch --tail=5 2>/dev/null | grep -q "tracing DISABLED"' || true
 run_cmd "kubectl -n trace-lab logs deploy/span-switch --tail=3"
 
 run_cmd "kubectl -n trace-lab set env deploy/span-switch TRACING_ENABLED=1 OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector.observability.svc:4318"
 run_cmd "kubectl -n trace-lab rollout status deploy/span-switch --timeout=300s"
-sleep 10
+echo "waiting for the old pod to terminate and the new one to boot..."
+retry 30 5 '[ "$(kubectl -n trace-lab get pods -l app=span-switch --no-headers 2>/dev/null | wc -l)" = "1" ]' || true
+retry 30 5 'kubectl -n trace-lab logs deploy/span-switch --tail=5 2>/dev/null | grep -q "tracing ENABLED"' || true
 run_cmd "kubectl -n trace-lab logs deploy/span-switch --tail=3"
 
 kubectl -n observability port-forward svc/jaeger-query 16686:16686 >/dev/null 2>&1 &

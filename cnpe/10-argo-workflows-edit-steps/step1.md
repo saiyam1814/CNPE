@@ -39,10 +39,12 @@ steps:
 - name: wait-ready
   container:
     image: rancher/kubectl:v1.28.0
-    command: [sh, -c]
-    args:
-      - kubectl rollout status deploy/checkout-api -n stage-coral --timeout=90s
+    command: [kubectl]
+    args: [rollout, status, deploy/checkout-api, -n, stage-coral, --timeout=90s]
 ```{{copy}}
+
+(The image ships only the `kubectl` binary — there is no shell in it, so the
+command must invoke `kubectl` directly, like the existing `deploy` template does.)
 
 Mind the indentation — templates sit at the same level as `deploy` and `test`.
 
@@ -73,16 +75,14 @@ spec:
     - name: deploy
       container:
         image: rancher/kubectl:v1.28.0
-        command: [sh, -c]
-        args:
-          - kubectl -n stage-coral rollout restart deploy/checkout-api
+        command: [kubectl]
+        args: [-n, stage-coral, rollout, restart, deploy/checkout-api]
 
     - name: wait-ready
       container:
         image: rancher/kubectl:v1.28.0
-        command: [sh, -c]
-        args:
-          - kubectl rollout status deploy/checkout-api -n stage-coral --timeout=90s
+        command: [kubectl]
+        args: [rollout, status, deploy/checkout-api, -n, stage-coral, --timeout=90s]
 
     - name: test
       container:

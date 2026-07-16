@@ -28,16 +28,14 @@ spec:
     - name: deploy
       container:
         image: rancher/kubectl:v1.28.0
-        command: [sh, -c]
-        args:
-          - kubectl -n stage-coral rollout restart deploy/checkout-api
+        command: [kubectl]
+        args: [-n, stage-coral, rollout, restart, deploy/checkout-api]
 
     - name: wait-ready
       container:
         image: rancher/kubectl:v1.28.0
-        command: [sh, -c]
-        args:
-          - kubectl rollout status deploy/checkout-api -n stage-coral --timeout=90s
+        command: [kubectl]
+        args: [rollout, status, deploy/checkout-api, -n, stage-coral, --timeout=90s]
 
     - name: test
       container:

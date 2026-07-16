@@ -1,0 +1,24 @@
+
+$ kubectl get constrainttemplate forbidfloatingtag -o jsonpath='{.spec.crd.spec.names.kind}'
+ForbidFloatingTag
+
+$ kubectl apply -f forbid-floating-tags.yaml
+forbidfloatingtag.constraints.gatekeeper.sh/forbid-floating-tags created
+
+$ kubectl get forbidfloatingtag forbid-floating-tags
+NAME                   ENFORCEMENT-ACTION   TOTAL-VIOLATIONS
+forbid-floating-tags   deny                 
+giving the webhook time to sync the constraint...
+
+$ kubectl -n tag-lab create deploy floating-latest --image=busybox:latest -- sleep 3600
+error: failed to create deployment: admission webhook "validation.gatekeeper.sh" denied the request: [forbid-floating-tags] container <busybox> uses floating tag :latest in image <busybox:latest>
+
+$ kubectl -n tag-lab create deploy missing-tag --image=busybox -- sleep 3600
+error: failed to create deployment: admission webhook "validation.gatekeeper.sh" denied the request: [forbid-floating-tags] container <busybox> uses an untagged image <busybox> - pin a tag
+
+$ kubectl -n tag-lab create deploy pinned-ok --image=busybox:1.36.1 -- sleep 3600
+deployment.apps/pinned-ok created
+
+$ kubectl -n tag-lab get deploy
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+pinned-ok   0/1     1            0           0s

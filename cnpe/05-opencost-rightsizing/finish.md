@@ -9,7 +9,7 @@ You used real FinOps tooling the way the CNPE expects:
 ## Key facts to remember
 
 - OpenCost = CNCF cost monitoring; allocation API on **9003**, UI on **9090**
-- `kubectl cost` works against OpenCost with `--service-name opencost --service-port 9003 -N opencost`
+- `kubectl cost` works against OpenCost with `--service-name opencost --service-port 9003 -N opencost --allocation-path /allocation/compute`
 - Cost ≈ requests × replicas × time. Requests drive cost even at 0% usage
 - "Scale up **by** N" ≠ "scale **to** N" — read the current replica count first
 

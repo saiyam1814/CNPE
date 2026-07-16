@@ -1,0 +1,89 @@
+
+$ cat /Users/saiyam/release-checker.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: release-checker-
+  namespace: workflows
+spec:
+  entrypoint: main
+  serviceAccountName: workflow-runner
+  templates:
+    - name: main
+      steps:
+        - - name: deploy
+            template: deploy
+        - - name: test
+            template: test
+
+    - name: deploy
+      container:
+        image: rancher/kubectl:v1.28.0
+        command: [kubectl]
+        args: [-n, stage-coral, rollout, restart, deploy/checkout-api]
+
+    - name: test
+      container:
+        image: busybox:1.36
+        command: [sh, -c]
+        args:
+          - echo "smoke tests passed"
+
+$ vim /root/release-checker.yaml   # (edits shown as final file below)
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: release-checker-
+  namespace: workflows
+spec:
+  entrypoint: main
+  serviceAccountName: workflow-runner
+  templates:
+    - name: main
+      steps:
+        - - name: deploy
+            template: deploy
+        - - name: ready-check
+            template: wait-ready
+        - - name: test
+            template: test
+
+    - name: deploy
+      container:
+        image: rancher/kubectl:v1.28.0
+        command: [kubectl]
+        args: [-n, stage-coral, rollout, restart, deploy/checkout-api]
+
+    - name: wait-ready
+      container:
+        image: rancher/kubectl:v1.28.0
+        command: [kubectl]
+        args: [rollout, status, deploy/checkout-api, -n, stage-coral, --timeout=90s]
+
+    - name: test
+      container:
+        image: busybox:1.36
+        command: [sh, -c]
+        args:
+          - echo "smoke tests passed"
+
+$ argo submit /Users/saiyam/release-checker.yaml -n workflows --wait --log
+Name:                release-checker-7wtqp
+Namespace:           workflows
+ServiceAccount:      workflow-runner
+Status:              Pending
+Created:             Thu Jul 16 17:47:08 +0530 (now)
+Progress:            
+release-checker-7wtqp-deploy-868036597: deployment.apps/checkout-api restarted
+release-checker-7wtqp-deploy-868036597: time="2026-07-16T12:17:10.797Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-7wtqp-wait-ready-2767710725: deployment "checkout-api" successfully rolled out
+release-checker-7wtqp-wait-ready-2767710725: time="2026-07-16T12:17:20.812Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-7wtqp-test-4070735928: smoke tests passed
+release-checker-7wtqp-test-4070735928: time="2026-07-16T12:17:35.411Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-7wtqp Succeeded at 2026-07-16 17:47:38 +0530 IST
+
+$ argo list -n workflows
+NAME                    STATUS      AGE   DURATION   PRIORITY   MESSAGE
+release-checker-7wtqp   Succeeded   30s   30s        0          
+release-checker-l997f   Failed      4m    10s        0          child 'release-checker-l997f-302190865' failed
+deploy-kit-m9tgc        Succeeded   5m    38s        0          

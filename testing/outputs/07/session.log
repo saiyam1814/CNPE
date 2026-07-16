@@ -1,0 +1,97 @@
+
+$ kubectl -n release-bay get deploy,svc
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/media-proxy   1/1     1            1           37s
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/media-proxy          ClusterIP   10.96.89.228    <none>        80/TCP    37s
+service/media-proxy-canary   ClusterIP   10.96.222.190   <none>        80/TCP    37s
+service/media-proxy-stable   ClusterIP   10.96.222.212   <none>        80/TCP    37s
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'
+[{"destination":{"host":"media-proxy-stable"},"weight":100},{"destination":{"host":"media-proxy-canary"},"weight":0}]
+
+$ kubectl apply -f media-proxy-rollout.yaml
+rollout.argoproj.io/media-proxy created
+waiting for rollout Healthy (rev 1)...
+
+$ kubectl argo rollouts get rollout media-proxy -n release-bay
+Name:            media-proxy
+Namespace:       release-bay
+Status:          ✔ Healthy
+Strategy:        Canary
+  Step:          5/5
+  SetWeight:     100
+  ActualWeight:  100
+Images:          nginx:1.25 (stable)
+Replicas:
+  Desired:       3
+  Current:       3
+  Updated:       3
+  Ready:         3
+  Available:     3
+
+NAME                                     KIND        STATUS     AGE  INFO
+⟳ media-proxy                            Rollout     ✔ Healthy  6s   
+└──# revision:1                                                      
+   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  6s   stable
+      ├──□ media-proxy-5b9c644f5f-s9dzd  Pod         ✔ Running  6s   ready:1/1
+      ├──□ media-proxy-5b9c644f5f-66ssd  Pod         ✔ Running  5s   ready:1/1
+      └──□ media-proxy-5b9c644f5f-mptvg  Pod         ✔ Running  5s   ready:1/1
+
+$ kubectl argo rollouts set image media-proxy media-proxy=nginx:1.26 -n release-bay
+rollout "media-proxy" image updated
+watching weights during the canary...
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+15s
+[{"destination":{"host":"media-proxy-stable"},"weight":80},{"destination":{"host":"media-proxy-canary"},"weight":20}]
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+30s
+[{"destination":{"host":"media-proxy-stable"},"weight":80},{"destination":{"host":"media-proxy-canary"},"weight":20}]
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+45s
+[{"destination":{"host":"media-proxy-stable"},"weight":60},{"destination":{"host":"media-proxy-canary"},"weight":40}]
+waiting for full promotion...
+
+$ kubectl argo rollouts get rollout media-proxy -n release-bay
+Name:            media-proxy
+Namespace:       release-bay
+Status:          ✔ Healthy
+Strategy:        Canary
+  Step:          5/5
+  SetWeight:     100
+  ActualWeight:  100
+Images:          nginx:1.25
+                 nginx:1.26 (stable)
+Replicas:
+  Desired:       3
+  Current:       6
+  Updated:       3
+  Ready:         6
+  Available:     6
+
+NAME                                     KIND        STATUS     AGE  INFO
+⟳ media-proxy                            Rollout     ✔ Healthy  82s  
+├──# revision:2                                                      
+│  └──⧉ media-proxy-c4b5f8b8b            ReplicaSet  ✔ Healthy  76s  stable
+│     ├──□ media-proxy-c4b5f8b8b-84djz   Pod         ✔ Running  76s  ready:1/1
+│     ├──□ media-proxy-c4b5f8b8b-k8qmn   Pod         ✔ Running  37s  ready:1/1
+│     └──□ media-proxy-c4b5f8b8b-sjbgm   Pod         ✔ Running  4s   ready:1/1
+└──# revision:1                                                      
+   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  82s  delay:28s
+      ├──□ media-proxy-5b9c644f5f-s9dzd  Pod         ✔ Running  82s  ready:1/1
+      ├──□ media-proxy-5b9c644f5f-66ssd  Pod         ✔ Running  81s  ready:1/1
+      └──□ media-proxy-5b9c644f5f-mptvg  Pod         ✔ Running  81s  ready:1/1
+
+$ kubectl -n release-bay logs traffic-gen --tail=8
+server: envoy
+server: envoy
+server: envoy
+server: envoy
+server: envoy
+server: envoy
+server: envoy
+server: envoy
+
+$ kubectl -n release-bay scale deploy media-proxy --replicas=0
+deployment.apps/media-proxy scaled

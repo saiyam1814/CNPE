@@ -1,0 +1,41 @@
+
+$ kubectl -n kyverno get pods
+NAME                                             READY   STATUS    RESTARTS   AGE
+kyverno-admission-controller-79997bfd94-2m8m5    1/1     Running   0          55s
+kyverno-background-controller-6684556679-lrmwg   1/1     Running   0          55s
+kyverno-cleanup-controller-976c9b46-9k7p9        1/1     Running   0          55s
+kyverno-reports-controller-66846c7594-hkkh7      1/1     Running   0          55s
+
+$ kubectl apply -f supply-chain-signoff.yaml
+clusterpolicy.kyverno.io/supply-chain-signoff created
+waiting for policy Ready...
+
+$ kubectl get clusterpolicy
+NAME                   ADMISSION   BACKGROUND   READY   AGE   MESSAGE
+supply-chain-signoff   true        false        True    4s    Ready
+
+$ kubectl apply -f ok-signed-web.yaml   # signed distroless - must be ADMITTED
+deployment.apps/ok-signed-web created
+
+$ kubectl apply -f blocked-plain-web.yaml   # unsigned - must be DENIED
+Error from server: error when creating "STDIN": admission webhook "mutate.kyverno.svc-fail" denied the request: 
+
+resource Deployment/policy-sandbox/blocked-plain-web was blocked due to the following policies 
+
+supply-chain-signoff:
+  autogen-require-keyless-cosign: 'failed to verify image docker.io/busybox:1.36:
+    .attestors[0].entries[0].keyless: no signatures found'
+-> denied (good)
+
+$ kubectl -n policy-sandbox wait --for=condition=available deploy/ok-signed-web --timeout=180s
+deployment.apps/ok-signed-web condition met
+
+$ kubectl -n policy-sandbox get deploy,pods
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/ok-signed-web   1/1     1            1           17s
+
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/ok-signed-web-85888fbc45-crfb8   1/1     Running   0          14s
+
+$ kubectl -n policy-sandbox get pod -l app=ok-signed-web -o jsonpath='{.items[0].spec.containers[0].image}'
+gcr.io/distroless/base:debug-nonroot@sha256:73532e54641a478ac4a0f8ebbe31e525f2c36af57a2fe10a0a3df69c40c824a6

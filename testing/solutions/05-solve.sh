@@ -29,8 +29,8 @@ kill $PF 2>/dev/null || true
 # kubectl cost plugin (best effort - flags depend on plugin version)
 if command -v kubectl-cost >/dev/null 2>&1; then
   echo ""
-  echo "\$ kubectl cost namespace --service-name opencost --service-port 9003 -N opencost --window 10m"
-  kubectl cost namespace --service-name opencost --service-port 9003 -N opencost --window 10m 2>&1 | head -14 || echo "(kubectl cost failed - allocation API output above is authoritative)"
+  echo "\$ kubectl cost namespace --service-name opencost --service-port 9003 -N opencost --allocation-path /allocation/compute --window 10m"
+  kubectl cost namespace --service-name opencost --service-port 9003 -N opencost --allocation-path /allocation/compute --window 10m 2>&1 | head -14 || echo "(kubectl cost failed - allocation API output above is authoritative)"
 fi
 
 run_cmd "echo api-alpha > $ROOTDIR/cheapest.txt"

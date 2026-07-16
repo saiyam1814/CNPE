@@ -1,0 +1,50 @@
+
+$ kubectl -n argo get pods
+NAME                                   READY   STATUS    RESTARTS   AGE
+argo-server-5bd566b5d6-hnj4f           1/1     Running   0          50s
+workflow-controller-78d6bb7b88-7txnb   1/1     Running   0          50s
+
+$ kubectl auth can-i create deployments -n demo-reef --as=system:serviceaccount:workflows:workflow-runner
+yes
+
+$ kubectl apply -f deploy-kit.yaml
+workflowtemplate.argoproj.io/deploy-kit created
+
+$ kubectl -n workflows get workflowtemplate
+NAME         AGE
+deploy-kit   0s
+
+$ argo submit --from workflowtemplate/deploy-kit -n workflows -p appName=catalog-ui -p targetNs=demo-reef -p count=3 -p containerImage=httpd:2.4 --wait --log
+Name:                deploy-kit-m9tgc
+Namespace:           workflows
+ServiceAccount:      unset
+Status:              Pending
+Created:             Thu Jul 16 17:41:43 +0530 (now)
+Progress:            
+Parameters:          
+  appName:           catalog-ui
+  targetNs:          demo-reef
+  count:             3
+  containerImage:    httpd:2.4
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.009Z" level=info msg="Starting Workflow Executor" version=v3.7.2
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.011Z" level=info msg="Using executor retry strategy" Duration=1s Factor=1.6 Jitter=0.5 Steps=5
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.011Z" level=info msg="Executor initialized" deadline="0001-01-01 00:00:00 +0000 UTC" includeScriptOutput=false namespace=workflows podName=deploy-kit-m9tgc templateName=ship version="&Version{Version:v3.7.2,BuildDate:2025-09-11T14:58:27Z,GitCommit:cf605b548f1b0137836dde2032517707ba87c6ae,GitTag:v3.7.2,GitTreeState:clean,GoVersion:go1.24.4,Compiler:gc,Platform:linux/arm64,}"
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.018Z" level=info msg="Loading manifest to /tmp/manifest.yaml"
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.019Z" level=info msg="kubectl apply -f /tmp/manifest.yaml -o json"
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.051Z" level=info msg="Resource: demo-reef/deployment.apps/catalog-ui. SelfLink: apis/apps/v1/namespaces/demo-reef/deployments/catalog-ui"
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.051Z" level=info msg="No output parameters"
+deploy-kit-m9tgc: time="2026-07-16T12:12:13.973Z" level=info msg="sub-process exited" argo=true error="<nil>"
+deploy-kit-m9tgc Succeeded at 2026-07-16 17:42:21 +0530 IST
+
+$ argo list -n workflows
+NAME               STATUS      AGE   DURATION   PRIORITY   MESSAGE
+deploy-kit-m9tgc   Succeeded   38s   38s        0          
+
+$ kubectl -n demo-reef get deploy catalog-ui
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+catalog-ui   1/3     3            1           8s
+
+$ kubectl -n demo-reef rollout status deploy/catalog-ui --timeout=180s
+Waiting for deployment "catalog-ui" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "catalog-ui" rollout to finish: 2 of 3 updated replicas are available...
+deployment "catalog-ui" successfully rolled out

@@ -8,8 +8,12 @@ The `kubectl cost` plugin is installed too.
 ```bash
 kubectl cost namespace \
   --service-name opencost --service-port 9003 -N opencost \
+  --allocation-path /allocation/compute \
   --window 10m --show-cpu --show-memory
 ```{{exec}}
+
+(`--allocation-path /allocation/compute` is required: the plugin's default path
+`/model/allocation` exists only on Kubecost, not OpenCost.)
 
 **Option B — raw allocation API:**
 

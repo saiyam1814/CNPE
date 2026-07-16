@@ -1,0 +1,29 @@
+
+$ kubectl -n pipeline-lab get pipeline,task
+NAME                                  AGE
+pipeline.tekton.dev/compile-release   0s
+
+NAME                      AGE
+task.tekton.dev/build     0s
+task.tekton.dev/package   0s
+
+$ kubectl apply -f kubectl-apply-task.yaml
+task.tekton.dev/kubectl-apply created
+
+$ kubectl apply -f compile-release-pipeline.yaml   # adds the apply task
+pipeline.tekton.dev/compile-release configured
+
+$ tkn pipeline start compile-release -n pipeline-lab --showlog
+PipelineRun started: compile-release-run-xfvfh
+Waiting for logs to be available...
+[build : compile] compiling release artifacts...
+[package : render] manifest rendered
+[build : compile] done
+
+
+[apply : apply] 2026/07/16 12:06:42 Error executing command: fork/exec /tekton/scripts/script-0-dmt4c: no such file or directory
+
+failed to get logs for task apply : container step-apply has failed  : [{"key":"StartedAt","value":"2026-07-16T12:06:42.047Z","type":3}]
+
+$ tkn pipelinerun list -n pipeline-lab
+Error: failed to list PipelineRuns from namespace pipeline-lab: no matches for tekton.dev/, Resource=pipelineruns
