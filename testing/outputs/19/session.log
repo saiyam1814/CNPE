@@ -1,0 +1,57 @@
+
+$ kubectl -n metrics-portal get deploy,pods
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/metrics-db   0/1     1            0           8s
+deployment.apps/metrics-ui   0/1     0            0           0s
+
+NAME                              READY   STATUS                       RESTARTS   AGE
+pod/metrics-db-595d44bd57-q9zgf   0/1     CreateContainerConfigError   0          8s
+
+$ kubectl -n metrics-portal get events --sort-by=.lastTimestamp | tail -12
+LAST SEEN   TYPE      REASON              OBJECT                             MESSAGE
+8s          Normal    Scheduled           pod/metrics-db-595d44bd57-q9zgf    Successfully assigned metrics-portal/metrics-db-595d44bd57-q9zgf to cnpe-a-control-plane
+8s          Normal    Pulled              pod/metrics-db-595d44bd57-q9zgf    Container image "postgres:16-alpine" already present on machine and can be accessed by the pod
+8s          Warning   Failed              pod/metrics-db-595d44bd57-q9zgf    Error: secret "metrics-db-auth" not found
+8s          Normal    SuccessfulCreate    replicaset/metrics-db-595d44bd57   Created pod: metrics-db-595d44bd57-q9zgf
+8s          Normal    ScalingReplicaSet   deployment/metrics-db              Scaled up replica set metrics-db-595d44bd57 from 0 to 1
+0s          Warning   FailedCreate        replicaset/metrics-ui-7f976896b8   Error creating: pods "metrics-ui-7f976896b8-2w8m8" is forbidden: exceeded quota: portal-quota, requested: pods=1, used: pods=1, limited: pods=1
+0s          Warning   FailedCreate        replicaset/metrics-ui-7f976896b8   Error creating: pods "metrics-ui-7f976896b8-fw8bf" is forbidden: exceeded quota: portal-quota, requested: pods=1, used: pods=1, limited: pods=1
+0s          Warning   FailedCreate        replicaset/metrics-ui-7f976896b8   Error creating: pods "metrics-ui-7f976896b8-2f5px" is forbidden: exceeded quota: portal-quota, requested: pods=1, used: pods=1, limited: pods=1
+0s          Warning   FailedCreate        replicaset/metrics-ui-7f976896b8   Error creating: pods "metrics-ui-7f976896b8-qhs8w" is forbidden: exceeded quota: portal-quota, requested: pods=1, used: pods=1, limited: pods=1
+0s          Warning   FailedCreate        replicaset/metrics-ui-7f976896b8   Error creating: pods "metrics-ui-7f976896b8-tpfjv" is forbidden: exceeded quota: portal-quota, requested: pods=1, used: pods=1, limited: pods=1
+0s          Normal    ScalingReplicaSet   deployment/metrics-ui              Scaled up replica set metrics-ui-7f976896b8 from 0 to 1
+
+$ kubectl -n metrics-portal get quota,limitrange,secret,pvc
+NAME                         REQUEST     LIMIT   AGE
+resourcequota/portal-quota   pods: 1/1           8s
+
+$ cat /Users/saiyam/triage.txt
+1. quota portal-quota caps pods at 1 - blocks metrics-ui pod creation
+2. secret metrics-db-auth missing - metrics-db pod in CreateContainerConfigError
+3. pvc metrics-ui-data missing - metrics-ui pod would stay Pending
+
+$ kubectl apply -f portal-quota.yaml   # fix 1: loosen the quota
+resourcequota/portal-quota configured
+
+$ kubectl -n metrics-portal create secret generic metrics-db-auth --from-literal=POSTGRES_PASSWORD='s3cret-p0rtal'
+secret/metrics-db-auth created
+
+$ kubectl apply -f metrics-ui-data.yaml   # fix 3: the missing PVC
+persistentvolumeclaim/metrics-ui-data created
+waiting for both deployments (RS retry backoff can take ~1 min)...
+
+$ kubectl -n metrics-portal wait --for=condition=available deploy --all --timeout=420s
+deployment.apps/metrics-db condition met
+deployment.apps/metrics-ui condition met
+
+$ kubectl -n metrics-portal get deploy,pods,pvc
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/metrics-db   1/1     1            1           13s
+deployment.apps/metrics-ui   1/1     1            1           5s
+
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/metrics-db-595d44bd57-jhgj9   1/1     Running   0          5s
+pod/metrics-ui-7f976896b8-z4722   1/1     Running   0          5s
+
+NAME                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/metrics-ui-data   Bound    pvc-c1349947-e250-462a-91db-26085b977145   256Mi      RWO            standard       <unset>                 5s

@@ -1,0 +1,59 @@
+
+$ kubectl -n build-room create serviceaccount ci-bot
+serviceaccount/ci-bot created
+
+$ kubectl -n build-room create role ci-bot --verb=get,list,watch,create,update,patch --resource=deployments.apps,configmaps
+role.rbac.authorization.k8s.io/ci-bot created
+
+$ kubectl -n build-room create rolebinding ci-bot --role=ci-bot --serviceaccount=build-room:ci-bot
+rolebinding.rbac.authorization.k8s.io/ci-bot created
+
+$ kubectl -n build-room describe role ci-bot
+Name:         ci-bot
+Labels:       <none>
+Annotations:  <none>
+PolicyRule:
+  Resources         Non-Resource URLs  Resource Names  Verbs
+  ---------         -----------------  --------------  -----
+  configmaps        []                 []              [get list watch create update patch]
+  deployments.apps  []                 []              [get list watch create update patch]
+
+$ kubectl auth can-i create deployments -n build-room --as=system:serviceaccount:build-room:ci-bot
+yes
+
+$ kubectl auth can-i delete deployments -n build-room --as=system:serviceaccount:build-room:ci-bot || true
+no
+
+$ kubectl auth can-i create deployments -n default --as=system:serviceaccount:build-room:ci-bot || true
+no
+
+$ kubectl auth can-i get secrets -n build-room --as=system:serviceaccount:build-room:ci-bot || true
+no
+
+$ kubectl auth can-i --list -n build-room --as=system:serviceaccount:build-room:ci-bot | tee /Users/saiyam/ci-bot-perms.txt
+Resources                                       Non-Resource URLs                      Resource Names   Verbs
+selfsubjectreviews.authentication.k8s.io        []                                     []               [create]
+selfsubjectaccessreviews.authorization.k8s.io   []                                     []               [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                                     []               [create]
+configmaps                                      []                                     []               [get list watch create update patch]
+deployments.apps                                []                                     []               [get list watch create update patch]
+                                                [/.well-known/openid-configuration/]   []               [get]
+                                                [/.well-known/openid-configuration]    []               [get]
+                                                [/api/*]                               []               [get]
+                                                [/api]                                 []               [get]
+                                                [/apis/*]                              []               [get]
+                                                [/apis]                                []               [get]
+                                                [/healthz]                             []               [get]
+                                                [/healthz]                             []               [get]
+                                                [/livez]                               []               [get]
+                                                [/livez]                               []               [get]
+                                                [/openapi/*]                           []               [get]
+                                                [/openapi]                             []               [get]
+                                                [/openid/v1/jwks/]                     []               [get]
+                                                [/openid/v1/jwks]                      []               [get]
+                                                [/readyz]                              []               [get]
+                                                [/readyz]                              []               [get]
+                                                [/version/]                            []               [get]
+                                                [/version/]                            []               [get]
+                                                [/version]                             []               [get]
+                                                [/version]                             []               [get]

@@ -1,0 +1,16 @@
+
+$ kubectl -n monitoring get prometheus main -o jsonpath='{.spec.ruleSelector}'
+{"matchLabels":{"release":"prometheus"}}
+
+$ kubectl apply -f prometheusrule.yaml
+prometheusrule.monitoring.coreos.com/frontend-slo created
+
+$ kubectl -n monitoring get prometheusrule
+NAME           AGE
+frontend-slo   0s
+waiting for the rule to appear in Prometheus...
+
+$ curl -s http://localhost:9090/api/v1/rules | (show rule states)
+FrontendHighErrorRate  state=unknown
+
+$ # live error ratio (the lab generates ~8% errors)

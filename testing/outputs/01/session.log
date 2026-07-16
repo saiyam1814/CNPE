@@ -1,11 +1,11 @@
 
 $ kubectl -n squad-nebula get deploy,pods
 NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nebula-api   2/2     2            2           0s
+deployment.apps/nebula-api   2/2     2            2           12s
 
 NAME                            READY   STATUS    RESTARTS   AGE
-pod/nebula-api-d4775845-6bs8x   1/1     Running   0          0s
-pod/nebula-api-d4775845-v2s2p   1/1     Running   0          0s
+pod/nebula-api-d4775845-k459v   1/1     Running   0          12s
+pod/nebula-api-d4775845-vdk25   1/1     Running   0          12s
 
 $ kubectl apply -f nebula-guards.yaml
 resourcequota/nebula-pod-cap created

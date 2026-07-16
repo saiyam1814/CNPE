@@ -4,7 +4,7 @@ PF=$!
 sleep 3
 
 curl -s -u admin:admin "http://localhost:3999/api/search?query=coral-dashboard" > /tmp/.graf-search.json 2>/dev/null
-UID=$(python3 -c "
+DASH_UID=$(python3 -c "
 import json
 try:
     r = json.load(open('/tmp/.graf-search.json'))
@@ -13,9 +13,9 @@ try:
 except Exception:
     print('')
 ")
-if [ -z "$UID" ]; then kill $PF 2>/dev/null; exit 1; fi
+if [ -z "$DASH_UID" ]; then kill $PF 2>/dev/null; exit 1; fi
 
-curl -s -u admin:admin "http://localhost:3999/api/dashboards/uid/$UID" > /tmp/.graf-dash.json 2>/dev/null
+curl -s -u admin:admin "http://localhost:3999/api/dashboards/uid/$DASH_UID" > /tmp/.graf-dash.json 2>/dev/null
 kill $PF 2>/dev/null
 
 python3 <<'PYEOF' || exit 1

@@ -1,0 +1,44 @@
+$ for ns in fleet-1 fleet-2 fleet-3 fleet-4; do kubectl label ns $ns pod-security.kubernetes.io/warn=baseline pod-security.kubernetes.io/warn-version=latest --overwrite; done
+namespace/fleet-1 labeled
+namespace/fleet-2 labeled
+namespace/fleet-3 labeled
+namespace/fleet-4 labeled
+
+$ kubectl get ns --show-labels | grep fleet
+fleet-1              Active   2s      kubernetes.io/metadata.name=fleet-1,pod-security.kubernetes.io/warn-version=latest,pod-security.kubernetes.io/warn=baseline
+fleet-2              Active   2s      kubernetes.io/metadata.name=fleet-2,pod-security.kubernetes.io/warn-version=latest,pod-security.kubernetes.io/warn=baseline
+fleet-3              Active   2s      kubernetes.io/metadata.name=fleet-3,pod-security.kubernetes.io/warn-version=latest,pod-security.kubernetes.io/warn=baseline
+fleet-4              Active   2s      kubernetes.io/metadata.name=fleet-4,pod-security.kubernetes.io/warn-version=latest,pod-security.kubernetes.io/warn=baseline
+
+$ # restart deployments and capture PSA warnings
+=== fleet-1 ===
+deployment.apps/ledger restarted
+=== fleet-2 ===
+Warning: would violate PodSecurity "baseline:latest": hostPath volumes (volume "varlog")
+deployment.apps/log-scraper restarted
+=== fleet-3 ===
+deployment.apps/quote-api restarted
+=== fleet-4 ===
+Warning: would violate PodSecurity "baseline:latest": host namespaces (hostNetwork=true), privileged (container "app" must not set securityContext.privileged=true)
+deployment.apps/net-probe restarted
+
+$ # server-side dry-run also reveals the warnings without restarts
+=== fleet-1 ===
+clean
+=== fleet-2 ===
+Warning: would violate PodSecurity "baseline:latest": hostPath volumes (volume "varlog")
+=== fleet-3 ===
+clean
+=== fleet-4 ===
+Warning: would violate PodSecurity "baseline:latest": host namespaces (hostNetwork=true), privileged (container "app" must not set securityContext.privileged=true)
+
+$ kubectl label ns fleet-2 secops.acme/needs-hardening=true --overwrite
+namespace/fleet-2 labeled
+
+$ kubectl label ns fleet-4 secops.acme/needs-hardening=true --overwrite
+namespace/fleet-4 labeled
+
+$ kubectl get ns -l secops.acme/needs-hardening=true
+NAME      STATUS   AGE
+fleet-2   Active   7s
+fleet-4   Active   7s

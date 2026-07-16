@@ -1,0 +1,57 @@
+
+$ kubectl -n storage-lab get pods
+NAME                  READY   STATUS    RESTARTS   AGE
+pg-76575966b9-nghtj   0/1     Pending   0          1s
+
+$ kubectl -n storage-lab get deploy -o yaml | grep -B2 -A3 claimName
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"cdn"},"name":"cdn","namespace":"storage-lab"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"cdn"}},"template":{"metadata":{"labels":{"app":"cdn"}},"spec":{"containers":[{"image":"nginx:1.27-alpine","name":"nginx","ports":[{"containerPort":80}],"volumeMounts":[{"mountPath":"/usr/share/nginx/html","name":"cache"}]}],"volumes":[{"name":"cache","persistentVolumeClaim":{"claimName":"cdn-cache"}}]}}}}
+    creationTimestamp: "2026-07-16T11:30:15Z"
+    generation: 1
+    labels:
+--
+        - name: cache
+          persistentVolumeClaim:
+            claimName: cdn-cache
+  status:
+    conditions:
+    - lastTransitionTime: "2026-07-16T11:30:16Z"
+--
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"pg"},"name":"pg","namespace":"storage-lab"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"pg"}},"template":{"metadata":{"labels":{"app":"pg"}},"spec":{"containers":[{"env":[{"name":"POSTGRES_PASSWORD","value":"labs3cret"},{"name":"PGDATA","value":"/var/lib/postgresql/data/pgdata"}],"image":"postgres:16-alpine","name":"postgres","ports":[{"containerPort":5432}],"volumeMounts":[{"mountPath":"/var/lib/postgresql/data","name":"data"}]}],"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"pg-storage"}}]}}}}
+    creationTimestamp: "2026-07-16T11:30:15Z"
+    generation: 1
+    labels:
+--
+        - name: data
+          persistentVolumeClaim:
+            claimName: pg-storage
+  status:
+    conditions:
+    - lastTransitionTime: "2026-07-16T11:30:15Z"
+
+$ kubectl get storageclass
+NAME        PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+fast-iops   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  5s
+standard    rancher.io/local-path   Delete          WaitForFirstConsumer   false                  4m45s
+
+$ touch /Users/saiyam/investigated
+
+$ kubectl apply -f pvcs.yaml
+persistentvolumeclaim/pg-storage created
+persistentvolumeclaim/cdn-cache created
+
+$ kubectl -n storage-lab wait --for=condition=available deploy/pg deploy/cdn --timeout=300s
+deployment.apps/pg condition met
+deployment.apps/cdn condition met
+
+$ kubectl -n storage-lab get pvc,pods
+NAME                               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/cdn-cache    Bound    pvc-40f63b66-3f9d-483b-a089-d59d38e32ea9   512Mi      RWO            standard       <unset>                 33s
+persistentvolumeclaim/pg-storage   Bound    pvc-ca4551a5-949f-47a9-aea8-651325b01664   512Mi      RWO            fast-iops      <unset>                 33s
+
+NAME                      READY   STATUS    RESTARTS   AGE
+pod/cdn-9d789c87c-n556m   1/1     Running   0          36s
+pod/pg-76575966b9-nghtj   1/1     Running   0          37s

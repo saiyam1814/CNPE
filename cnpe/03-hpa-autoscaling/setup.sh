@@ -10,9 +10,10 @@ METRICS_SERVER_VERSION=v0.8.0
 # Install metrics-server (required for CPU-based HPA) if not present
 if ! kubectl get deploy metrics-server -n kube-system >/dev/null 2>&1; then
   curl -sL "https://github.com/kubernetes-sigs/metrics-server/releases/download/${METRICS_SERVER_VERSION}/components.yaml" -o /tmp/metrics-server.yaml
-  # kubelets in lab clusters use self-signed certs
-  sed -i 's/args:/args:\n        - --kubelet-insecure-tls/' /tmp/metrics-server.yaml
   kubectl apply -f /tmp/metrics-server.yaml
+  # kubelets in lab clusters use self-signed certs
+  kubectl -n kube-system patch deploy metrics-server --type=json \
+    -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
 fi
 
 kubectl create namespace edge-web --dry-run=client -o yaml | kubectl apply -f -

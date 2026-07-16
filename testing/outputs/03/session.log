@@ -1,0 +1,32 @@
+
+$ kubectl -n edge-web get deploy storefront -o jsonpath='{.spec.template.spec.containers[0].resources}'
+{"limits":{"cpu":"300m"},"requests":{"cpu":"100m"}}
+
+$ kubectl -n edge-web autoscale deployment storefront --name=storefront --cpu-percent=60 --min=2 --max=8
+Flag --cpu-percent has been deprecated, Use --cpu with percentage or resource quantity format (e.g., '70%' for utilization or '500m' for milliCPU).
+horizontalpodautoscaler.autoscaling/storefront autoscaled
+waiting for the HPA to read metrics...
+
+$ kubectl -n edge-web get hpa storefront
+NAME         REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+storefront   Deployment/storefront   cpu: 1%/60%   2         8         2          21s
+
+$ # generate load with four workers
+pod/load-gen-1 created
+pod/load-gen-2 created
+pod/load-gen-3 created
+pod/load-gen-4 created
+waiting for scale-out (>2 replicas)...
+
+$ kubectl -n edge-web get hpa storefront
+NAME         REFERENCE               TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+storefront   Deployment/storefront   cpu: 139%/60%   2         8         2          51s
+
+$ kubectl -n edge-web get pods -l app=storefront --no-headers | wc -l
+       4
+
+$ kubectl -n edge-web delete pod load-gen-1 load-gen-2 load-gen-3 load-gen-4 --ignore-not-found --now
+pod "load-gen-1" deleted from edge-web namespace
+pod "load-gen-2" deleted from edge-web namespace
+pod "load-gen-3" deleted from edge-web namespace
+pod "load-gen-4" deleted from edge-web namespace

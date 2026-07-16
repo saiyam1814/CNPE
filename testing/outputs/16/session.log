@@ -1,0 +1,66 @@
+
+$ kubectl -n monitoring get deploy,svc
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/grafana   1/1     1            1           1s
+
+NAME              TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/grafana   ClusterIP   10.96.62.96   <none>        80/TCP    1s
+
+$ kubectl -n obs get deploy,svc,pods
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/prom       1/1     1            1           1s
+deployment.apps/web-shop   1/1     1            1           1s
+
+NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/prom       ClusterIP   10.96.204.0    <none>        9090/TCP   1s
+service/web-shop   ClusterIP   10.96.78.121   <none>        8080/TCP   1s
+
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/prom-5fb84d4d79-wpxnx       1/1     Running   0          1s
+pod/shopper                     1/1     Running   0          1s
+pod/web-shop-544887cf85-fpcxr   1/1     Running   0          1s
+
+$ # (exam path is the UI - this is the API equivalent)
+$ curl -X POST http://localhost:3000/api/datasources -u admin:admin -d '{"name":"PromLab",...}'
+{
+    "datasource": {
+        "id": 1,
+        "uid": "ffsa2kg8q54hsf",
+        "orgId": 1,
+        "name": "PromLab",
+        "type": "prometheus",
+        "typeLogoUrl": "public/plugins/prometheus/img/prometheus_logo.svg",
+        "access": "proxy",
+        "url": "http://prom.obs.svc:9090",
+        "user": "",
+        "database": "",
+        "basicAuth": false,
+        "basicAuthUser": "",
+        "withCredentials": false,
+        "isDefault": true,
+        "jsonData": {},
+        "secureJsonFields": {},
+        "version": 1,
+        "readOnly": false,
+        "apiVersion": ""
+    },
+    "id": 1,
+    "message": "Datasource added",
+    "name": "PromLab"
+}
+
+$ curl -X POST http://localhost:3000/api/dashboards/db ... (coral-dashboard with Request Mix panel)
+{
+    "folderUid": "",
+    "id": 1,
+    "slug": "coral-dashboard",
+    "status": "success",
+    "uid": "99f1ec20-63ba-4b50-98d8-d116be6f9b44",
+    "url": "/d/99f1ec20-63ba-4b50-98d8-d116be6f9b44/coral-dashboard",
+    "version": 1
+}
+
+$ # prove the query returns data (via Grafana datasource proxy would need uid; ask Prometheus directly)
+{'code': '200', 'handler': '/', 'instance': 'web-shop.obs.svc:8080', 'job': 'web-shop', 'service': 'web-shop'} -> 0.0566
+{'code': '200', 'handler': '/checkout', 'instance': 'web-shop.obs.svc:8080', 'job': 'web-shop', 'service': 'web-shop'} -> 0.0566
+{'code': '500', 'handler': '/err', 'instance': 'web-shop.obs.svc:8080', 'job': 'web-shop', 'service': 'web-shop'} -> 0.0566

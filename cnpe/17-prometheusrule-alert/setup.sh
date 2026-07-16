@@ -213,6 +213,11 @@ spec:
 EOF
 
 kubectl -n frontend rollout status deploy/frontend --timeout=300s || true
+# the operator needs a moment to create the StatefulSet pod before we can wait on it
+for i in $(seq 1 60); do
+  kubectl -n monitoring get pod prometheus-main-0 >/dev/null 2>&1 && break
+  sleep 5
+done
 kubectl -n monitoring wait --for=condition=ready pod/prometheus-main-0 --timeout=300s || true
 
 touch /tmp/.cnpe-setup-done
