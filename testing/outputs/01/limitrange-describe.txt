@@ -1,0 +1,5 @@
+Name:       nebula-cpu-defaults
+Namespace:  squad-nebula
+Type        Resource  Min  Max   Default Request  Default Limit  Max Limit/Request Ratio
+----        --------  ---  ---   ---------------  -------------  -----------------------
+Container   cpu       -    250m  50m              50m            -

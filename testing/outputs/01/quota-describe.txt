@@ -1,0 +1,5 @@
+Name:       nebula-pod-cap
+Namespace:  squad-nebula
+Resource    Used  Hard
+--------    ----  ----
+pods        3     6

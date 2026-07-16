@@ -1,0 +1,4 @@
+NAME                        READY   STATUS    RESTARTS   AGE
+default-cpu-pod             1/1     Running   0          19s
+nebula-api-d4775845-l2wkx   1/1     Running   0          41s
+nebula-api-d4775845-ms7vw   1/1     Running   0          41s
