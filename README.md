@@ -1,12 +1,13 @@
 # CNPE Scenarios and Solutions
 
-The hands-on companion for the **Certified Cloud Native Platform Engineer (CNPE)**
-exam: an ebook with 27 exam-style scenarios plus a matching interactive
-**Killercoda course** where every scenario runs on a real cluster with automated
-verification.
+27 hands-on, exam-style labs for the **Certified Cloud Native Platform Engineer
+(CNPE)** exam — run them free in the browser on Killercoda, or locally on kind.
 
-- 📖 **Ebook:** `book/dist/` (HTML / PDF / EPUB — build with `book/build.sh`)
 - 🧪 **Interactive labs:** [killercoda.com/saiyampathak/course/cnpe](https://killercoda.com/saiyampathak/course/cnpe)
+- 💻 **Local labs on kind:** `./lab.sh` (see below) — same tasks, same verification
+- 📖 **Companion ebook** — *CNPE Scenarios and Solutions*: every lab as a full chapter
+  with concepts, diagrams, real tested outputs, and exam tips. Published separately
+  on Gumroad (link coming soon)
 - ✅ **Everything tested:** every setup script, solution, and verification in this repo
   is exercised end-to-end on kind by `testing/run-scenario.sh`
 
@@ -20,12 +21,6 @@ cnpe/                    Killercoda course (27 scenarios, one directory each)
     intro.md step*.md    exam-style task + tips + solution dropdowns
     verify*.sh           CHECK-button verification (exit 0 = pass)
   ...
-book/
-  src/                   chapter markdown (front matter, 6 parts, 27 chapters, appendices)
-  images/                Excalidraw-style SVG diagrams (generated)
-  tools/                 diagram generator (xkd.py, diagrams.py) + preprocess.py
-  styles/                book.css + Excalifont
-  build.sh               builds HTML, PDF (headless Chrome), EPUB into book/dist/
 testing/
   run-scenario.sh        run one scenario end-to-end against current kubectl context
   solutions/NN-solve.sh  scripted solutions (double as output capture for the book)
@@ -75,16 +70,6 @@ The harness adapts each `setup.sh` (Killercoda-isms stripped), runs the scripted
 solution from `testing/solutions/`, then executes the scenario's own verify scripts —
 the same ones behind the Killercoda CHECK button.
 
-## Building the book
-
-```bash
-./book/build.sh    # needs pandoc + Chrome; outputs to book/dist/
-```
-
-Diagrams are generated (`python3 book/tools/diagrams.py`) in a hand-drawn, light-theme
-Excalidraw style and inlined into the HTML/EPUB so the Excalifont typography survives
-every format.
-
 ## Publishing the Killercoda course
 
 The live course is served from the `cnpe/` folder inside
@@ -103,7 +88,7 @@ The script refuses to run if the target repo ever gains a root `structure.json`
 picks up the push and updates the live course within a minute or two.
 
 (The root `structure.json` in *this* repo only matters if you ever link this repo to a
-Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `book/`
+Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `testing/`
 and `testing/`.)
 
 ---

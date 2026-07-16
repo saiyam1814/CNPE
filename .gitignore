@@ -7,5 +7,4 @@ testing/outputs/*/opt/
 testing/outputs/*/setup.adapted.sh
 testing/outputs/*/setup.log
 
-# book build artifacts
-book/dist/
+.DS_Store
