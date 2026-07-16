@@ -18,7 +18,7 @@ spec:
       type: string
   steps:
     - name: apply
-      image: rancher/kubectl:v1.28.0
+      image: bitnamilegacy/kubectl:1.28.9
       script: |
         #!/bin/sh
         set -eu

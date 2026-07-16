@@ -1,0 +1,41 @@
+
+$ tkn pipeline start build-ship -n ci-otter -p gitrevision=manual-test --showlog
+PipelineRun started: build-ship-run-p5fpt
+Waiting for logs to be available...
+[ship : ship] building and shipping revision manual-test
+[ship : ship] shipped.
+
+
+$ kubectl apply -f triggers.yaml
+triggertemplate.triggers.tekton.dev/build-ship-tt created
+triggerbinding.triggers.tekton.dev/build-ship-tb created
+eventlistener.triggers.tekton.dev/build-ship-el created
+
+$ kubectl -n ci-otter wait --for=condition=available deploy/el-build-ship-el --timeout=180s
+deployment.apps/el-build-ship-el condition met
+
+$ kubectl -n ci-otter get deploy,svc
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/el-build-ship-el   1/1     1            1           11s
+
+NAME                       TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+service/el-build-ship-el   ClusterIP   10.96.60.195   <none>        8080/TCP,9000/TCP   11s
+
+$ curl -s -X POST http://127.0.0.1:8080 -H 'Content-Type: application/json' -d '{"after": "4f2c1ab"}'
+{
+    "eventListener": "build-ship-el",
+    "namespace": "ci-otter",
+    "eventListenerUID": "76cc6b92-42bc-4769-8767-44bc82305a1b",
+    "eventID": "d18f020d-7bd6-4f28-a51d-89264f7bd995"
+}
+waiting for the webhook-spawned run to succeed...
+
+$ tkn pipelinerun list -n ci-otter
+NAME                   STARTED          DURATION   STATUS
+build-ship-xqlqw       6 seconds ago    6s         Succeeded
+build-ship-run-p5fpt   27 seconds ago   6s         Succeeded
+
+$ tkn pipelinerun logs --last -n ci-otter
+[ship : ship] building and shipping revision 4f2c1ab
+[ship : ship] shipped.
+

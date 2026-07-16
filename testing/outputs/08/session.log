@@ -38,3 +38,73 @@ NAME                                 KIND        STATUS     AGE  INFO
 $ kubectl argo rollouts set image catalog catalog=nginx:1.26 -n shop-core
 rollout "catalog" image updated
 waiting for Paused (preview up, human gate)...
+
+$ kubectl argo rollouts get rollout catalog -n shop-core
+Name:            catalog
+Namespace:       shop-core
+Status:          ॥ Paused
+Message:         BlueGreenPause
+Strategy:        BlueGreen
+Images:          nginx:1.25 (stable, active)
+                 nginx:1.26 (preview)
+Replicas:
+  Desired:       2
+  Current:       4
+  Updated:       2
+  Ready:         2
+  Available:     2
+
+NAME                                 KIND        STATUS     AGE  INFO
+⟳ catalog                            Rollout     ॥ Paused   11s  
+├──# revision:2                                                  
+│  └──⧉ catalog-f7958f98             ReplicaSet  ✔ Healthy  5s   preview
+│     ├──□ catalog-f7958f98-lcd7w    Pod         ✔ Running  5s   ready:1/1
+│     └──□ catalog-f7958f98-vh9nm    Pod         ✔ Running  5s   ready:1/1
+└──# revision:1                                                  
+   └──⧉ catalog-745fb6cf75           ReplicaSet  ✔ Healthy  11s  stable,active
+      ├──□ catalog-745fb6cf75-6rpcg  Pod         ✔ Running  11s  ready:1/1
+      └──□ catalog-745fb6cf75-rlmmc  Pod         ✔ Running  11s  ready:1/1
+
+$ kubectl -n shop-core run qa --rm -i --restart=Never --image=curlimages/curl:8.9.1 -- sh -c 'echo -n "active:  "; curl -sI catalog-active.shop-core.svc | grep -i ^server; echo -n "preview: "; curl -sI catalog-preview.shop-core.svc | grep -i ^server'
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+pod "qa" deleted from shop-core namespace
+
+$ kubectl argo rollouts promote catalog -n shop-core
+rollout 'catalog' promoted
+waiting for promotion to finish...
+
+$ kubectl argo rollouts get rollout catalog -n shop-core
+Name:            catalog
+Namespace:       shop-core
+Status:          ✔ Healthy
+Strategy:        BlueGreen
+Images:          nginx:1.25
+                 nginx:1.26 (stable, active)
+Replicas:
+  Desired:       2
+  Current:       4
+  Updated:       2
+  Ready:         2
+  Available:     2
+
+NAME                                 KIND        STATUS     AGE  INFO
+⟳ catalog                            Rollout     ✔ Healthy  19s  
+├──# revision:2                                                  
+│  └──⧉ catalog-f7958f98             ReplicaSet  ✔ Healthy  13s  stable,active
+│     ├──□ catalog-f7958f98-lcd7w    Pod         ✔ Running  13s  ready:1/1
+│     └──□ catalog-f7958f98-vh9nm    Pod         ✔ Running  13s  ready:1/1
+└──# revision:1                                                  
+   └──⧉ catalog-745fb6cf75           ReplicaSet  ✔ Healthy  19s  delay:23s
+      ├──□ catalog-745fb6cf75-6rpcg  Pod         ✔ Running  19s  ready:1/1
+      └──□ catalog-745fb6cf75-rlmmc  Pod         ✔ Running  19s  ready:1/1
+
+$ kubectl -n shop-core scale deploy catalog --replicas=0
+deployment.apps/catalog scaled
+
+$ kubectl -n shop-core get rollout,deploy
+NAME                          DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+rollout.argoproj.io/catalog   2         4         2            2           19s
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/catalog   0/0     0            0           20s

@@ -65,5 +65,5 @@ echo "waiting for full promotion..."
 retry 40 6 '[ "$(kubectl -n release-bay get rollout media-proxy -o jsonpath="{.status.phase}")" = "Healthy" ] && [ "$(kubectl -n release-bay get rollout media-proxy -o jsonpath="{.status.currentPodHash}")" = "$(kubectl -n release-bay get rollout media-proxy -o jsonpath="{.status.stableRS}")" ] && [ "$(kubectl -n release-bay get rollout media-proxy -o jsonpath="{.spec.template.spec.containers[0].image}")" = "nginx:1.26" ]' || exit 1
 
 run_cmd "kubectl argo rollouts get rollout media-proxy -n release-bay"
-run_cmd "kubectl -n release-bay logs traffic-gen --tail=8"
+run_cmd "kubectl -n release-bay logs traffic-gen --tail=8 | sort | uniq -c || true"
 run_cmd "kubectl -n release-bay scale deploy media-proxy --replicas=0"

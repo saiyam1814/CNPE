@@ -44,7 +44,7 @@ echo "waiting for Paused (preview up, human gate)..."
 retry 40 5 '[ "$(kubectl -n shop-core get rollout catalog -o jsonpath="{.status.phase}")" = "Paused" ]' || exit 1
 run_cmd "kubectl argo rollouts get rollout catalog -n shop-core"
 
-run_cmd "kubectl -n shop-core run qa --rm -i --restart=Never --image=curlimages/curl:8.9.1 -- sh -c 'echo -n \"active:  \"; curl -sI catalog-active.shop-core.svc | grep -i ^server; echo -n \"preview: \"; curl -sI catalog-preview.shop-core.svc | grep -i ^server'"
+run_cmd "kubectl -n shop-core run qa --rm -i --restart=Never --image=curlimages/curl:8.9.1 -- sh -c 'sleep 2; echo -n \"active:  \"; curl -sI catalog-active.shop-core.svc | grep -i ^server; echo -n \"preview: \"; curl -sI catalog-preview.shop-core.svc | grep -i ^server'"
 
 run_cmd "kubectl argo rollouts promote catalog -n shop-core"
 

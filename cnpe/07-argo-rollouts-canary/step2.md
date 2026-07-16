@@ -1,7 +1,9 @@
 # Release a new version and watch the weights
 
-Now the fun part. In a second terminal tab, watch the live traffic split
-(the `traffic-gen` Pod prints which nginx version served each request):
+Now the fun part. In a second terminal tab, watch the live traffic split — the
+`traffic-gen` Pod prints which nginx version served each request (it reads the
+version from the response body; the `Server:` *header* would just say `envoy`,
+because the sidecar rewrites it):
 
 ```plain
 kubectl -n release-bay logs traffic-gen -f

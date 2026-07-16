@@ -117,8 +117,10 @@ spec:
     - name: curl
       image: curlimages/curl:8.9.1
       command: ["/bin/sh", "-c"]
+      # nginx 404 pages carry the version in the body; Istio's sidecar rewrites the
+      # Server header (always "envoy") but never the body - so this shows the true mix
       args:
-        - while true; do curl -sI --max-time 2 http://media-proxy.release-bay.svc 2>/dev/null | grep -i "^server:"; sleep 0.5; done
+        - while true; do curl -s --max-time 2 http://media-proxy.release-bay.svc/give-me-your-version 2>/dev/null | grep -o "nginx/[0-9.]*"; sleep 0.5; done
 EOF
 
 kubectl -n release-bay rollout status deploy/media-proxy --timeout=300s || true

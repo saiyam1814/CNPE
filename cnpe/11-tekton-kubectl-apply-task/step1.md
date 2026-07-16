@@ -10,7 +10,7 @@ kubectl -n pipeline-lab get task package -o yaml | grep -B2 -A4 results
 Create Task `kubectl-apply` (API `tekton.dev/v1`). Requirements again:
 
 - param `manifest`, type `string`
-- image `rancher/kubectl:v1.28.0`
+- image `bitnamilegacy/kubectl:1.28.9`
 - write the param to a file, `kubectl apply -f` that file
 
 <details><summary>✦ Tip — params inside scripts</summary>
@@ -41,7 +41,7 @@ spec:
       type: string
   steps:
     - name: apply
-      image: rancher/kubectl:v1.28.0
+      image: bitnamilegacy/kubectl:1.28.9
       script: |
         #!/bin/sh
         set -eu

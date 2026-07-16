@@ -1,0 +1,27 @@
+
+$ kubectl -n ci-otter get pipeline build-ship -o yaml | grep -A22 'tasks:' | head -26
+  tasks:
+  - name: image
+    params:
+    - name: image
+      value: $(params.image)
+    taskRef:
+      kind: Task
+      name: resolve-image
+  - name: deploy
+    params:
+    - name: image
+      value: $(tasks.image.results.image-url)
+    runAfter:
+    - image
+    taskRef:
+      kind: Task
+      name: deploy-image
+
+$ kubectl apply -f scan-image-task.yaml
+task.tekton.dev/scan-image created
+
+$ kubectl apply -f build-ship-pipeline.yaml   # scan wired between image and deploy
+pipeline.tekton.dev/build-ship configured
+
+$ tkn pipeline start build-ship -n ci-otter -p image=nginx:1.16 --showlog   # must FAIL

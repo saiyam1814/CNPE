@@ -17,7 +17,7 @@ Prove the two lanes serve different versions (the nginx `Server` header betrays 
 
 ```bash
 kubectl -n shop-core run qa --rm -i --restart=Never --image=curlimages/curl:8.9.1 -- \
-  sh -c 'echo -n "active:  "; curl -sI catalog-active.shop-core.svc | grep -i ^server; echo -n "preview: "; curl -sI catalog-preview.shop-core.svc | grep -i ^server'
+  sh -c 'sleep 2; echo -n "active:  "; curl -sI catalog-active.shop-core.svc | grep -i ^server; echo -n "preview: "; curl -sI catalog-preview.shop-core.svc | grep -i ^server'
 ```{{exec}}
 
 QA signs off — promote:
