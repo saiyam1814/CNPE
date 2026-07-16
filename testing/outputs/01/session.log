@@ -1,0 +1,39 @@
+
+$ kubectl -n squad-nebula get deploy,pods
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nebula-api   2/2     2            2           0s
+
+NAME                            READY   STATUS    RESTARTS   AGE
+pod/nebula-api-d4775845-6bs8x   1/1     Running   0          0s
+pod/nebula-api-d4775845-v2s2p   1/1     Running   0          0s
+
+$ kubectl apply -f nebula-guards.yaml
+resourcequota/nebula-pod-cap created
+limitrange/nebula-cpu-defaults created
+
+$ kubectl -n squad-nebula describe quota nebula-pod-cap
+Name:       nebula-pod-cap
+Namespace:  squad-nebula
+Resource    Used  Hard
+--------    ----  ----
+pods        2     6
+
+$ kubectl -n squad-nebula describe limitrange nebula-cpu-defaults
+Name:       nebula-cpu-defaults
+Namespace:  squad-nebula
+Type        Resource  Min  Max   Default Request  Default Limit  Max Limit/Request Ratio
+----        --------  ---  ---   ---------------  -------------  -----------------------
+Container   cpu       -    250m  50m              50m            -
+
+$ kubectl -n squad-nebula run default-cpu-pod --image=busybox:1.36 --restart=Never -- sleep 3600
+pod/default-cpu-pod created
+
+$ kubectl -n squad-nebula get pod default-cpu-pod -o jsonpath='{.spec.containers[0].resources}'
+{"limits":{"cpu":"50m"},"requests":{"cpu":"50m"}}
+
+$ kubectl apply -f over-max-cpu.yaml   # must FAIL
+Error from server (Forbidden): error when creating "STDIN": pods "over-max-cpu" is forbidden: maximum cpu usage per Container is 250m, but limit is 300m
+
+$ kubectl -n squad-nebula get quota
+NAME             REQUEST     LIMIT   AGE
+nebula-pod-cap   pods: 3/6           4s

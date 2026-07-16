@@ -1,0 +1,13 @@
++ kubectl get nodes
++ kubectl create namespace squad-nebula --dry-run=client -o yaml
++ kubectl apply -f -
+namespace/squad-nebula created
++ cat
++ kubectl apply -f -
+deployment.apps/nebula-api created
++ kubectl -n squad-nebula rollout status deploy/nebula-api --timeout=180s
+Waiting for deployment "nebula-api" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "nebula-api" rollout to finish: 1 of 2 updated replicas are available...
+deployment "nebula-api" successfully rolled out
++ echo SETUP_DONE
+SETUP_DONE

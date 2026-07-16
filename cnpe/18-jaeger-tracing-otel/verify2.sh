@@ -2,7 +2,9 @@
 # The exported file must match the trace's exception exactly
 python3 <<'PYEOF' || exit 1
 import json
-d = json.load(open("/root/exception.json"))
+import os
+p = "/root/exception.json" if os.path.exists("/root/exception.json") else os.path.expanduser("~/exception.json")
+d = json.load(open(p))
 assert d.get("key") == "exception.message"
 assert d.get("type") == "string"
 assert d.get("value") == "connection refused to payment-svc:8080"

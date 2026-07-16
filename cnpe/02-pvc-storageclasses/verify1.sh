@@ -1,3 +1,3 @@
 #!/bin/bash
-[ -f /root/investigated ] || exit 1
+[ -f /root/investigated ] || [ -f "$HOME/investigated" ] || exit 1
 exit 0
