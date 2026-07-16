@@ -1,6 +1,6 @@
 
 $ kubectl -n batch exec reporting -- curl -s --max-time 5 http://checkout.payments.svc:8080/hostname
-checkout-766bcdc85-t85v8
+checkout-766bcdc85-q722v
 
 $ kubectl apply -f authz.yaml
 authorizationpolicy.security.istio.io/checkout-allow-storefront created
@@ -11,7 +11,8 @@ checkout-allow-storefront   ALLOW    0s
 letting the policy propagate to sidecars...
 
 $ # storefront (allowed identity):
-checkout-766bcdc85-t85v8
+checkout-766bcdc85-q722v
 
 $ # reporting (denied identity):
 RBAC: access denied
+

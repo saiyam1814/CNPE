@@ -37,5 +37,14 @@ echo ""
 
 echo ""
 echo "\$ # reporting (denied identity):"
-kubectl -n batch exec reporting -- curl -s --max-time 5 http://checkout.payments.svc:8080/hostname || true
+# a connection opened before the policy stays on the old envoy config until
+# drained (<=45s); wait for two consecutive denials so the state is stable
+DEN=0; R=""
+for _ in $(seq 1 20); do
+  R=$(kubectl -n batch exec reporting -- curl -s --max-time 5 http://checkout.payments.svc:8080/hostname 2>/dev/null)
+  if echo "$R" | grep -qi denied; then DEN=$((DEN+1)); else DEN=0; fi
+  [ "$DEN" -ge 2 ] && break
+  sleep 3
+done
+echo "$R"
 echo ""

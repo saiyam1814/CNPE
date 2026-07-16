@@ -27,6 +27,9 @@ which rejected the peer certificate's identity before the request touched the ap
 - **Neither blocked:** did the policy land in the **payments** namespace with the
   right `selector`? `istioctl analyze -n payments` finds typos
 - Policy changes take a few seconds to reach sidecars — retry once before debugging
+- A connection opened **before** the policy can keep answering until Envoy drains
+  it (up to ~45s) — an intruder curl that still succeeds right after `apply` is
+  usually just that stale connection. Wait and retry.
 
 </details>
 

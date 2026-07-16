@@ -25,3 +25,63 @@ $ kubectl apply -f build-ship-pipeline.yaml   # scan wired between image and dep
 pipeline.tekton.dev/build-ship configured
 
 $ tkn pipeline start build-ship -n ci-otter -p image=nginx:1.16 --showlog   # must FAIL
+[scan : trivy] │              ├────────────────┤          │              │                   │                         ├──────────────────────────────────────────────────────────────┤
+[scan : trivy] │              │ CVE-2020-36330 │          │              │                   │                         │ libwebp: out-of-bounds read in ChunkVerifyAndAssign() in     │
+[scan : trivy] │              │                │          │              │                   │                         │ mux/muxread.c                                                │
+[scan : trivy] │              │                │          │              │                   │                         │ https://avd.aquasec.com/nvd/cve-2020-36330                   │
+[scan : trivy] │              ├────────────────┤          │              │                   │                         ├──────────────────────────────────────────────────────────────┤
+[scan : trivy] │              │ CVE-2020-36331 │          │              │                   │                         │ libwebp: out-of-bounds read in ChunkAssignData() in          │
+[scan : trivy] │              │                │          │              │                   │                         │ mux/muxinternal.c                                            │
+[scan : trivy] │              │                │          │              │                   │                         │ https://avd.aquasec.com/nvd/cve-2020-36331                   │
+[scan : trivy] ├──────────────┼────────────────┤          │              ├───────────────────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+[scan : trivy] │ libx11-6     │ CVE-2021-31535 │          │              │ 2:1.6.7-1         │ 2:1.6.7-1+deb10u2       │ libX11: missing request length checks                        │
+[scan : trivy] │              │                │          │              │                   │                         │ https://avd.aquasec.com/nvd/cve-2021-31535                   │
+[scan : trivy] ├──────────────┤                │          │              │                   │                         │                                                              │
+[scan : trivy] │ libx11-data  │                │          │              │                   │                         │                                                              │
+[scan : trivy] │              │                │          │              │                   │                         │                                                              │
+[scan : trivy] ├──────────────┼────────────────┤          │              ├───────────────────┼─────────────────────────┼──────────────────────────────────────────────────────────────┤
+[scan : trivy] │ zlib1g       │ CVE-2022-37434 │          │              │ 1:1.2.11.dfsg-1   │ 1:1.2.11.dfsg-1+deb10u2 │ zlib: heap-based buffer over-read and overflow in inflate()  │
+[scan : trivy] │              │                │          │              │                   │                         │ in inflate.c via a...                                        │
+[scan : trivy] │              │                │          │              │                   │                         │ https://avd.aquasec.com/nvd/cve-2022-37434                   │
+[scan : trivy] │              ├────────────────┤          ├──────────────┤                   ├─────────────────────────┼──────────────────────────────────────────────────────────────┤
+[scan : trivy] │              │ CVE-2023-45853 │          │ will_not_fix │                   │                         │ zlib: integer overflow and resultant heap-based buffer       │
+[scan : trivy] │              │                │          │              │                   │                         │ overflow in zipOpenNewFileInZip4_6                           │
+[scan : trivy] │              │                │          │              │                   │                         │ https://avd.aquasec.com/nvd/cve-2023-45853                   │
+[scan : trivy] └──────────────┴────────────────┴──────────┴──────────────┴───────────────────┴─────────────────────────┴──────────────────────────────────────────────────────────────┘
+
+failed to get logs for task scan : container step-trivy has failed  : [{"key":"StartedAt","value":"2026-07-16T12:34:27.161Z","type":3}]
+confirming the vulnerable run failed and nothing deployed...
+
+$ kubectl -n ci-otter get deploy shipped
+Error from server (NotFound): deployments.apps "shipped" not found
+
+$ tkn pipeline start build-ship -n ci-otter -p image=gcr.io/distroless/static:nonroot --showlog   # must PASS
+[image : resolve] resolved image: gcr.io/distroless/static:nonroot
+
+[scan : trivy] scanning gcr.io/distroless/static:nonroot for CRITICAL CVEs...
+[scan : trivy] 2026-07-16T12:35:20Z	INFO	[vulndb] Need to update DB
+[scan : trivy] 2026-07-16T12:35:20Z	INFO	[vulndb] Downloading vulnerability DB...
+[scan : trivy] 2026-07-16T12:35:20Z	INFO	[vulndb] Downloading artifact...	repo="mirror.gcr.io/aquasec/trivy-db:2"
+[scan : trivy] 1.28 MiB / 100.32 MiB [>_____________________________________________________________] 1.27% ? p/s ?10.56 MiB / 100.32 MiB [------>_____________________________________________________] 10.52% ? p/s ?19.67 MiB / 100.32 MiB [----------->________________________________________________] 19.61% ? p/s ?29.27 MiB / 100.32 MiB [------------->_________________________________] 29.17% 46.65 MiB p/s ETA 1s39.09 MiB / 100.32 MiB [------------------>____________________________] 38.97% 46.65 MiB p/s ETA 1s49.44 MiB / 100.32 MiB [----------------------->_______________________] 49.28% 46.65 MiB p/s ETA 1s59.15 MiB / 100.32 MiB [--------------------------->___________________] 58.96% 46.85 MiB p/s ETA 0s69.05 MiB / 100.32 MiB [-------------------------------->______________] 68.83% 46.85 MiB p/s ETA 0s78.51 MiB / 100.32 MiB [------------------------------------>__________] 78.26% 46.85 MiB p/s ETA 0s86.74 MiB / 100.32 MiB [---------------------------------------->______] 86.46% 46.42 MiB p/s ETA 0s93.39 MiB / 100.32 MiB [------------------------------------------->___] 93.09% 46.42 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 46.42 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 45.14 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 45.14 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 45.14 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 42.22 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 42.22 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 42.22 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 39.50 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 39.50 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 39.50 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 36.95 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 36.95 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 36.95 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-------------------------------------------->] 100.00% 34.57 MiB p/s ETA 0s100.32 MiB / 100.32 MiB [-----------------------------------------------] 100.00% 20.52 MiB p/s 5.1s2026-07-16T12:35:26Z	INFO	[vulndb] Artifact successfully downloaded	repo="mirror.gcr.io/aquasec/trivy-db:2"
+[scan : trivy] 2026-07-16T12:35:26Z	INFO	[vuln] Vulnerability scanning is enabled
+[scan : trivy] 2026-07-16T12:35:39Z	INFO	Detected OS	family="debian" version="13.6"
+[scan : trivy] 2026-07-16T12:35:39Z	INFO	[debian] Detecting vulnerabilities...	os_version="13" pkg_num=5
+[scan : trivy] 2026-07-16T12:35:39Z	INFO	Number of language-specific files	num=0
+[scan : trivy] 
+[scan : trivy] gcr.io/distroless/static:nonroot (debian 13.6)
+[scan : trivy] ==============================================
+[scan : trivy] Total: 0 (CRITICAL: 0)
+[scan : trivy] 
+
+[deploy : deploy] deployment.apps/shipped created
+[deploy : deploy] deployed gcr.io/distroless/static:nonroot
+
+confirming the clean run succeeded and deployed...
+
+$ tkn pipelinerun list -n ci-otter
+NAME                   STARTED          DURATION   STATUS
+build-ship-run-vjrnz   34 seconds ago   34s        Succeeded
+build-ship-run-wbq2z   1 minute ago     57s        Failed
+
+$ kubectl -n ci-otter get deploy shipped -o jsonpath='{.spec.template.spec.containers[0].image}'
+gcr.io/distroless/static:nonroot
