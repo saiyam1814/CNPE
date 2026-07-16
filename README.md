@@ -69,9 +69,24 @@ every format.
 
 ## Publishing the Killercoda course
 
-Add this repository to your [Killercoda creator profile](https://killercoda.com/creators);
-the root `structure.json` exposes only `cnpe/` as a course. Every push updates the live
-scenarios.
+The live course is served from the `cnpe/` folder inside
+[`saiyam1814/katacoda-scenarios`](https://github.com/saiyam1814/katacoda-scenarios)
+(the repo linked to the [killercoda.com/saiyampathak](https://killercoda.com/saiyampathak)
+profile). **This repo is the source of truth** — after changing anything under `cnpe/`,
+publish with:
+
+```bash
+./sync-to-killercoda.sh              # lint, rsync into katacoda-scenarios, commit, push
+./sync-to-killercoda.sh --dry-run    # preview what would change
+```
+
+The script refuses to run if the target repo ever gains a root `structure.json`
+(which would hide every other scenario on the profile). Killercoda's GitHub webhook
+picks up the push and updates the live course within a minute or two.
+
+(The root `structure.json` in *this* repo only matters if you ever link this repo to a
+Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `book/`
+and `testing/`.)
 
 ---
 
