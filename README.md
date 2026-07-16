@@ -1,7 +1,7 @@
 # CNPE Scenarios and Solutions
 
 The hands-on companion for the **Certified Cloud Native Platform Engineer (CNPE)**
-exam: an ebook with 25 exam-style scenarios plus a matching interactive
+exam: an ebook with 27 exam-style scenarios plus a matching interactive
 **Killercoda course** where every scenario runs on a real cluster with automated
 verification.
 
@@ -13,7 +13,7 @@ verification.
 ## Repository layout
 
 ```
-cnpe/                    Killercoda course (25 scenarios, one directory each)
+cnpe/                    Killercoda course (27 scenarios, one directory each)
   01-resourcequota-limitrange/
     index.json           scenario config (steps, verify, backend image)
     setup.sh             background environment build
@@ -21,7 +21,7 @@ cnpe/                    Killercoda course (25 scenarios, one directory each)
     verify*.sh           CHECK-button verification (exit 0 = pass)
   ...
 book/
-  src/                   chapter markdown (front matter, 5 parts, 25 chapters, appendices)
+  src/                   chapter markdown (front matter, 6 parts, 27 chapters, appendices)
   images/                Excalidraw-style SVG diagrams (generated)
   tools/                 diagram generator (xkd.py, diagrams.py) + preprocess.py
   styles/                book.css + Excalifont
@@ -33,7 +33,7 @@ testing/
   ensure-clis.sh         downloads darwin CLIs for local testing
 ```
 
-## The 25 scenarios
+## The 27 scenarios
 
 Ordered by exam domain (weights from the official curriculum):
 
@@ -44,18 +44,36 @@ Ordered by exam domain (weights from the official curriculum):
 | III | Platform APIs & Self-Service (25%) | 13 CRD · 14 Crossplane Composition · 15 Crossplane Claim |
 | IV | Observability & Operations (20%) | 16 Grafana · 17 PrometheusRule · 18 Jaeger/OTel · 19 incident triage |
 | V | Security & Policy (15%) | 20 RBAC · 21 PSS · 22 Gatekeeper · 23 Kyverno+Cosign · 24 Istio authz · 25 Trivy gate |
+| VI | Bonus (curriculum completeness) | 26 Flagger canary · 27 Linkerd authorization |
 
-## Testing a scenario locally
+## Doing the labs locally on kind (no Killercoda needed)
+
+```bash
+./lab.sh cluster              # create the cnpe-lab kind cluster
+./lab.sh cluster --cni calico # ...with NetworkPolicy enforcement (needed for lab 04)
+./lab.sh list                 # all 27 labs
+./lab.sh start 07             # build lab 07's environment (installs its stack)
+./lab.sh task 07              # read the exam-style task in your terminal
+# ...solve it with kubectl...
+./lab.sh check 07             # the CHECK button, locally
+./lab.sh solution 07          # stuck? the full solution
+./lab.sh reset                # clean slate between labs
+```
+
+macOS users: run `./testing/ensure-clis.sh` once for the darwin CLIs (istioctl, argo,
+tkn, linkerd, ...). On Linux each lab's setup installs its own CLIs, exactly like on
+Killercoda.
+
+## CI-style testing of a scenario (setup + solution + verify)
 
 ```bash
 kind create cluster --name cnpe
-./testing/ensure-clis.sh                 # once, downloads darwin CLIs
 ./testing/run-scenario.sh 01-resourcequota-limitrange
 ```
 
 The harness adapts each `setup.sh` (Killercoda-isms stripped), runs the scripted
-solution, then executes the scenario's own verify scripts — the same ones behind the
-Killercoda CHECK button.
+solution from `testing/solutions/`, then executes the scenario's own verify scripts —
+the same ones behind the Killercoda CHECK button.
 
 ## Building the book
 

@@ -45,6 +45,16 @@ if [ ! -x "$BIN/argocd" ]; then
   chmod +x "$BIN/argocd"
 fi
 
+LINKERD_VERSION=edge-26.6.3
+if [ ! -x "$BIN/linkerd" ]; then
+  echo "installing linkerd $LINKERD_VERSION"
+  SUFFIX="$OS"
+  [ "$OS" = "darwin" ] && [ "$ARCH" = "arm64" ] && SUFFIX="darwin-arm64"
+  [ "$OS" = "linux" ] && SUFFIX="linux-${ARCH}"
+  curl -sL -o "$BIN/linkerd" "https://github.com/linkerd/linkerd2/releases/download/${LINKERD_VERSION}/linkerd2-cli-${LINKERD_VERSION}-${SUFFIX}"
+  chmod +x "$BIN/linkerd"
+fi
+
 if [ ! -x "$BIN/kubectl-cost" ]; then
   echo "installing kubectl-cost"
   KCOST_VERSION=$(curl -s https://api.github.com/repos/kubecost/kubectl-cost/releases/latest | grep tag_name | cut -d'"' -f4)

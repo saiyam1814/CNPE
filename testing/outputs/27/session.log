@@ -1,0 +1,27 @@
+
+$ kubectl -n payments get pod -l app=checkout -o jsonpath='{.items[0].spec.containers[*].name}'
+checkout
+
+$ kubectl -n batch exec reporting -c curl -- curl -s --max-time 5 http://checkout.payments.svc:8080/hostname
+checkout-65c96f99c7-4c6x9
+
+$ kubectl apply -f checkout-server.yaml
+server.policy.linkerd.io/checkout created
+
+$ # a Server with no authorization denies EVERYONE:
+
+$ kubectl -n web exec storefront -c curl -- curl -sf --max-time 5 http://checkout.payments.svc:8080/hostname
+command terminated with exit code 22
+
+$ kubectl -n batch exec reporting -c curl -- curl -sf --max-time 5 http://checkout.payments.svc:8080/hostname
+command terminated with exit code 22
+
+$ kubectl apply -f authz.yaml
+meshtlsauthentication.policy.linkerd.io/storefront-only created
+authorizationpolicy.policy.linkerd.io/checkout-allow-storefront created
+
+$ # storefront (allowed identity):
+checkout-65c96f99c7-4c6x9
+
+$ # reporting (denied identity):
+ HTTP:403

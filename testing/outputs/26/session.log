@@ -1,0 +1,67 @@
+
+$ kubectl -n release-bay get deploy,svc,virtualservice
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/media-proxy   2/2     2            2           71s
+
+$ kubectl apply -f media-proxy-canary.yaml
+canary.flagger.app/media-proxy created
+waiting for Flagger to initialize the canary...
+
+$ kubectl -n release-bay get canary media-proxy
+NAME          STATUS        WEIGHT   LASTTRANSITIONTIME
+media-proxy   Initialized   0        2026-07-16T16:47:25Z
+
+$ kubectl -n release-bay get deploy,svc,virtualservice
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/media-proxy           0/0     0            0           103s
+deployment.apps/media-proxy-primary   2/2     2            2           24s
+
+NAME                          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/media-proxy           ClusterIP   10.96.186.117   <none>        80/TCP    4s
+service/media-proxy-canary    ClusterIP   10.96.204.52    <none>        80/TCP    24s
+service/media-proxy-primary   ClusterIP   10.96.187.233   <none>        80/TCP    24s
+
+NAME                                             GATEWAYS   HOSTS             AGE
+virtualservice.networking.istio.io/media-proxy   ["mesh"]   ["media-proxy"]   4s
+
+$ kubectl -n release-bay set image deploy/media-proxy media-proxy=nginx:1.26
+deployment.apps/media-proxy image updated
+watching the canary progress (weights on the VirtualService)...
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+25s
+[{"destination":{"host":"media-proxy-primary"},"weight":100},{"destination":{"host":"media-proxy-canary"},"weight":0}]
+media-proxy   Progressing   0     2026-07-16T16:47:45Z
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+50s
+[{"destination":{"host":"media-proxy-primary"},"weight":80},{"destination":{"host":"media-proxy-canary"},"weight":20}]
+media-proxy   Progressing   20    2026-07-16T16:48:05Z
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+75s
+[{"destination":{"host":"media-proxy-primary"},"weight":60},{"destination":{"host":"media-proxy-canary"},"weight":40}]
+media-proxy   Progressing   40    2026-07-16T16:48:25Z
+
+$ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'   # t+100s
+[{"destination":{"host":"media-proxy-primary"},"weight":20},{"destination":{"host":"media-proxy-canary"},"weight":80}]
+media-proxy   Progressing   80    2026-07-16T16:49:05Z
+waiting for promotion (Succeeded)...
+
+$ kubectl -n release-bay get canary media-proxy
+NAME          STATUS      WEIGHT   LASTTRANSITIONTIME
+media-proxy   Succeeded   0        2026-07-16T16:50:25Z
+
+$ kubectl -n release-bay get events --field-selector involvedObject.name=media-proxy --sort-by=.lastTimestamp | tail -12
+3m6s        Normal    ScalingReplicaSet   deployment/media-proxy   Scaled down replica set media-proxy-56f8b999b9 from 2 to 0
+3m6s        Normal    Synced              canary/media-proxy       Initialization done! media-proxy.release-bay
+2m46s       Normal    ScalingReplicaSet   deployment/media-proxy   Scaled up replica set media-proxy-bfbc7b7dd from 0 to 2
+2m46s       Normal    Synced              canary/media-proxy       New revision detected! Scaling up media-proxy.release-bay
+2m26s       Normal    Synced              canary/media-proxy       Starting canary analysis for media-proxy.release-bay
+2m26s       Normal    Synced              canary/media-proxy       Advance media-proxy.release-bay canary weight 20
+2m6s        Normal    Synced              canary/media-proxy       Advance media-proxy.release-bay canary weight 40
+106s        Normal    Synced              canary/media-proxy       Advance media-proxy.release-bay canary weight 60
+86s         Normal    Synced              canary/media-proxy       Advance media-proxy.release-bay canary weight 80
+66s         Normal    Synced              canary/media-proxy       Advance media-proxy.release-bay canary weight 100
+6s          Normal    Synced              canary/media-proxy       (combined from similar events): Promotion completed! Scaling down media-proxy.release-bay
+6s          Normal    ScalingReplicaSet   deployment/media-proxy   Scaled down replica set media-proxy-bfbc7b7dd from 2 to 0
+
+$ kubectl -n release-bay get deploy media-proxy-primary -o jsonpath='{.spec.template.spec.containers[0].image}'
+nginx:1.26

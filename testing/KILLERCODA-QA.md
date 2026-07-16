@@ -45,6 +45,11 @@ everything to `/var/log/cnpe-setup.log` inside the VM too.
 
 ## Priority 2 — heavier stacks, same patterns as P1
 
+- [ ] **26-flagger-canary** — istio + flagger + prometheus on 4GB (the heaviest
+      bonus lab); canary Initialized in ~1 min, full promotion ~3 min after the
+      image change.
+- [ ] **27-linkerd-authorization** — linkerd edge + Gateway API CRDs; Server
+      default-denies, then storefront 200 / reporting 403.
 - [ ] **24-istio-authorizationpolicy** — istio again; storefront allowed, reporting
       `RBAC: access denied` (verify tolerates the ~45s Envoy drain).
 - [ ] **17-prometheusrule-alert** — prom-operator bundle on 4GB; rule loads, alert
