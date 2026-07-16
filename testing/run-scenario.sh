@@ -15,6 +15,16 @@ NUM="${SCEN%%-*}"
 OUT="$REPO/testing/outputs/$NUM"
 mkdir -p "$OUT"
 
+# local (non-root) testing: darwin CLIs live in testing/bin; linux binaries the
+# setup scripts download go to a throwaway dir instead of /usr/local/bin
+if [ ! -w /usr/local/bin ] || [ "$(uname)" = "Darwin" ]; then
+  export PATH="$REPO/testing/bin:$PATH"
+  mkdir -p "$OUT/linux-bin" "$OUT/opt"
+  REWRITE_BIN=1
+else
+  REWRITE_BIN=0
+fi
+
 [ -d "$DIR" ] || { echo "no such scenario: $DIR"; exit 2; }
 
 echo "=== [$SCEN] context: $(kubectl config current-context) ==="
@@ -27,6 +37,11 @@ if [ "$NO_SETUP" = "0" ]; then
       -e 's|^touch /tmp/.cnpe-setup-done|echo SETUP_DONE|' \
       -e "s|/root/|$HOME/|g" \
       "$DIR/setup.sh" > "$OUT/setup.adapted.sh"
+  # on dev machines, CLI downloads for linux are pointless - drop them to a scratch dir
+  if [ "$REWRITE_BIN" = "1" ]; then
+    sed -i '' -e "s|/usr/local/bin|$OUT/linux-bin|g" -e "s| -C /opt| -C $OUT/opt|g" -e "s|/opt/istio|$OUT/opt/istio|g" "$OUT/setup.adapted.sh" 2>/dev/null || \
+    sed -i -e "s|/usr/local/bin|$OUT/linux-bin|g" -e "s| -C /opt| -C $OUT/opt|g" -e "s|/opt/istio|$OUT/opt/istio|g" "$OUT/setup.adapted.sh"
+  fi
   if ! bash "$OUT/setup.adapted.sh" > "$OUT/setup.log" 2>&1; then
     echo "SETUP FAILED - tail of log:"; tail -20 "$OUT/setup.log"; exit 3
   fi

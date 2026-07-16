@@ -9,7 +9,7 @@ TEKTON_VERSION=v1.14.0
 TKN_VERSION=0.45.0
 
 # --- Tekton Pipelines ----------------------------------------------------------
-kubectl apply -f "https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_VERSION}/release.yaml"
+kubectl apply -f "https://github.com/tektoncd/pipeline/releases/download/${TEKTON_VERSION}/release.yaml"
 
 # tkn CLI
 ARCH=$(uname -m); [ "$ARCH" = "aarch64" ] && TARCH=aarch64 || TARCH=x86_64

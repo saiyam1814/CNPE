@@ -9,11 +9,11 @@ TEKTON_VERSION=v1.14.0
 TRIGGERS_VERSION=v0.36.0
 TKN_VERSION=0.45.0
 
-kubectl apply -f "https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_VERSION}/release.yaml"
+kubectl apply -f "https://github.com/tektoncd/pipeline/releases/download/${TEKTON_VERSION}/release.yaml"
 kubectl -n tekton-pipelines rollout status deploy/tekton-pipelines-webhook --timeout=600s || true
 
-kubectl apply -f "https://storage.googleapis.com/tekton-releases/triggers/previous/${TRIGGERS_VERSION}/release.yaml"
-kubectl apply -f "https://storage.googleapis.com/tekton-releases/triggers/previous/${TRIGGERS_VERSION}/interceptors.yaml"
+kubectl apply -f "https://github.com/tektoncd/triggers/releases/download/${TRIGGERS_VERSION}/release.yaml"
+kubectl apply -f "https://github.com/tektoncd/triggers/releases/download/${TRIGGERS_VERSION}/interceptors.yaml"
 
 ARCH=$(uname -m); [ "$ARCH" = "aarch64" ] && TARCH=aarch64 || TARCH=x86_64
 curl -sL "https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_${TARCH}.tar.gz" | tar xz -C /usr/local/bin tkn

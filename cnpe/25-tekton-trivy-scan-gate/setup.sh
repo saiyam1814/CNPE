@@ -8,7 +8,7 @@ until kubectl get nodes >/dev/null 2>&1; do sleep 2; done
 TEKTON_VERSION=v1.14.0
 TKN_VERSION=0.45.0
 
-kubectl apply -f "https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_VERSION}/release.yaml"
+kubectl apply -f "https://github.com/tektoncd/pipeline/releases/download/${TEKTON_VERSION}/release.yaml"
 
 ARCH=$(uname -m); [ "$ARCH" = "aarch64" ] && TARCH=aarch64 || TARCH=x86_64
 curl -sL "https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_${TARCH}.tar.gz" | tar xz -C /usr/local/bin tkn
