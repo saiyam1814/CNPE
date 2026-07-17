@@ -1,11 +1,11 @@
 # CNPE Scenarios and Solutions
 
 27 hands-on, exam-style labs for the **Certified Cloud Native Platform Engineer
-(CNPE)** exam — run them free in the browser on Killercoda, or locally on kind.
+(CNPE)** exam - run them free in the browser on Killercoda, or locally on kind.
 
 - 🧪 **Interactive labs:** [killercoda.com/saiyampathak/course/cnpe](https://killercoda.com/saiyampathak/course/cnpe)
-- 💻 **Local labs on kind:** `./lab.sh` (see below) — same tasks, same verification
-- 📖 **Companion ebook** — *CNPE Scenarios and Solutions*: every lab as a full chapter
+- 💻 **Local labs on kind:** `./lab.sh` (see below) - same tasks, same verification
+- 📖 **Companion ebook** - *CNPE Scenarios and Solutions*: every lab as a full chapter
   with concepts, diagrams, real tested outputs, and exam tips. Published separately
   on Gumroad (link coming soon)
 - ✅ **Everything tested:** every setup script, solution, and verification in this repo
@@ -67,7 +67,7 @@ kind create cluster --name cnpe
 ```
 
 The harness adapts each `setup.sh` (Killercoda-isms stripped), runs the scripted
-solution from `testing/solutions/`, then executes the scenario's own verify scripts —
+solution from `testing/solutions/`, then executes the scenario's own verify scripts - 
 the same ones behind the Killercoda CHECK button.
 
 ## Publishing the Killercoda course
@@ -75,7 +75,7 @@ the same ones behind the Killercoda CHECK button.
 The live course is served from the `cnpe/` folder inside
 [`saiyam1814/katacoda-scenarios`](https://github.com/saiyam1814/katacoda-scenarios)
 (the repo linked to the [killercoda.com/saiyampathak](https://killercoda.com/saiyampathak)
-profile). **This repo is the source of truth** — after changing anything under `cnpe/`,
+profile). **This repo is the source of truth** - after changing anything under `cnpe/`,
 publish with:
 
 ```bash
@@ -88,7 +88,7 @@ The script refuses to run if the target repo ever gains a root `structure.json`
 picks up the push and updates the live course within a minute or two.
 
 (The root `structure.json` in *this* repo only matters if you ever link this repo to a
-Killercoda profile directly — it exposes `cnpe/` as the sole course and hides `testing/`.)
+Killercoda profile directly - it exposes `cnpe/` as the sole course and hides `testing/`.)
 
 ---
 

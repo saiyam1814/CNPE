@@ -24,6 +24,16 @@ CALICO_VERSION=v3.32.1
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 
+preflight() {
+  local missing=()
+  for t in docker kind kubectl; do
+    command -v "$t" >/dev/null 2>&1 || missing+=("$t")
+  done
+  [ ${#missing[@]} -eq 0 ] || die "missing required tools: ${missing[*]}
+  install: Docker Desktop/Engine (docker.com), kind (kind.sigs.k8s.io), kubectl"
+  docker info >/dev/null 2>&1 || die "docker is installed but the daemon is not running - start Docker first"
+}
+
 lab_dir() {
   local n
   n=$(printf "%02d" "$((10#$1))") 2>/dev/null || die "bad lab number: $1"
@@ -35,7 +45,8 @@ lab_dir() {
 
 ensure_context() {
   local ctx
-  ctx=$(kubectl config current-context 2>/dev/null) || die "no kubectl context - run: ./lab.sh cluster"
+  ctx=$(kubectl config current-context 2>/dev/null) || die "no kubectl context - create the cluster first: ./lab.sh cluster
+  (needs Docker running + kind + kubectl installed; see the README)"
   case "$ctx" in
     kind-$CLUSTER) ;;
     *) echo "note: current context is '$ctx' (not kind-$CLUSTER) - using it anyway" ;;
@@ -43,6 +54,7 @@ ensure_context() {
 }
 
 cmd_cluster() {
+  preflight
   local cni=default
   [ "${1:-}" = "--cni" ] && cni="${2:-}"
   if kind get clusters 2>/dev/null | grep -qx "$CLUSTER"; then
@@ -80,6 +92,7 @@ cmd_list() {
 }
 
 cmd_start() {
+  preflight
   local d; d=$(lab_dir "$1")
   ensure_context
   echo "==> building environment for $(basename "$d") (this installs the lab's stack - can take minutes)"
