@@ -18,3 +18,10 @@ Fixes applied:
   `rollout status` + `checkout-api`, which the list-form args still satisfy.
 
 Result: PASS on kind-cnpe-c, wall time ~34s (second run; first run failed as above).
+
+## 2026-07-19 field report fix (thanks Vishal)
+- The em-dash cleanup on 2026-07-17 accidentally collapsed the Argo steps
+  double-dash syntax in step1.md ("- - name:" became "-  name:"), producing
+  invalid YAML in the solution block (line-13 "mapping values are not allowed").
+  setup.sh and verify were never affected. Restored and re-tested end-to-end
+  (run passed; ALL CHECKS PASSED). Book chapter 10 had the same corruption, fixed.

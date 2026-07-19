@@ -68,22 +68,20 @@ spec:
           - echo "smoke tests passed"
 
 $ argo submit /Users/saiyam/release-checker.yaml -n workflows --wait --log
-Name:                release-checker-7wtqp
+Name:                release-checker-6pjww
 Namespace:           workflows
 ServiceAccount:      workflow-runner
 Status:              Pending
-Created:             Thu Jul 16 17:47:08 +0530 (now)
+Created:             Sun Jul 19 08:01:58 +0530 (now)
 Progress:            
-release-checker-7wtqp-deploy-868036597: deployment.apps/checkout-api restarted
-release-checker-7wtqp-deploy-868036597: time="2026-07-16T12:17:10.797Z" level=info msg="sub-process exited" argo=true error="<nil>"
-release-checker-7wtqp-wait-ready-2767710725: deployment "checkout-api" successfully rolled out
-release-checker-7wtqp-wait-ready-2767710725: time="2026-07-16T12:17:20.812Z" level=info msg="sub-process exited" argo=true error="<nil>"
-release-checker-7wtqp-test-4070735928: smoke tests passed
-release-checker-7wtqp-test-4070735928: time="2026-07-16T12:17:35.411Z" level=info msg="sub-process exited" argo=true error="<nil>"
-release-checker-7wtqp Succeeded at 2026-07-16 17:47:38 +0530 IST
+release-checker-6pjww-deploy-1944969636: deployment.apps/checkout-api restarted
+release-checker-6pjww-deploy-1944969636: time="2026-07-19T02:32:13.484Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-6pjww-wait-ready-4270901038: deployment "checkout-api" successfully rolled out
+release-checker-6pjww-wait-ready-4270901038: time="2026-07-19T02:32:25.241Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-6pjww-test-766024537: smoke tests passed
+release-checker-6pjww-test-766024537: time="2026-07-19T02:32:39.613Z" level=info msg="sub-process exited" argo=true error="<nil>"
+release-checker-6pjww Succeeded at 2026-07-19 08:02:42 +0530 IST
 
 $ argo list -n workflows
 NAME                    STATUS      AGE   DURATION   PRIORITY   MESSAGE
-release-checker-7wtqp   Succeeded   30s   30s        0          
-release-checker-l997f   Failed      4m    10s        0          child 'release-checker-l997f-302190865' failed
-deploy-kit-m9tgc        Succeeded   5m    38s        0          
+release-checker-6pjww   Succeeded   44s   44s        0          

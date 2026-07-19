@@ -1,12 +1,12 @@
 
 $ kubectl -n release-bay get deploy,svc
 NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/media-proxy   1/1     1            1           37s
+deployment.apps/media-proxy   1/1     1            1           23s
 
 NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-service/media-proxy          ClusterIP   10.96.89.228    <none>        80/TCP    37s
-service/media-proxy-canary   ClusterIP   10.96.222.190   <none>        80/TCP    37s
-service/media-proxy-stable   ClusterIP   10.96.222.212   <none>        80/TCP    37s
+service/media-proxy          ClusterIP   10.96.111.191   <none>        80/TCP    23s
+service/media-proxy-canary   ClusterIP   10.96.1.235     <none>        80/TCP    23s
+service/media-proxy-stable   ClusterIP   10.96.82.81     <none>        80/TCP    23s
 
 $ kubectl -n release-bay get virtualservice media-proxy -o jsonpath='{.spec.http[0].route}'
 [{"destination":{"host":"media-proxy-stable"},"weight":100},{"destination":{"host":"media-proxy-canary"},"weight":0}]
@@ -32,12 +32,12 @@ Replicas:
   Available:     3
 
 NAME                                     KIND        STATUS     AGE  INFO
-⟳ media-proxy                            Rollout     ✔ Healthy  6s   
+⟳ media-proxy                            Rollout     ✔ Healthy  5s   
 └──# revision:1                                                      
-   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  6s   stable
-      ├──□ media-proxy-5b9c644f5f-s9dzd  Pod         ✔ Running  6s   ready:1/1
-      ├──□ media-proxy-5b9c644f5f-66ssd  Pod         ✔ Running  5s   ready:1/1
-      └──□ media-proxy-5b9c644f5f-mptvg  Pod         ✔ Running  5s   ready:1/1
+   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  5s   stable
+      ├──□ media-proxy-5b9c644f5f-cnwgg  Pod         ✔ Running  5s   ready:1/1
+      ├──□ media-proxy-5b9c644f5f-cs8dn  Pod         ✔ Running  5s   ready:1/1
+      └──□ media-proxy-5b9c644f5f-qh466  Pod         ✔ Running  5s   ready:1/1
 
 $ kubectl argo rollouts set image media-proxy media-proxy=nginx:1.26 -n release-bay
 rollout "media-proxy" image updated
@@ -73,25 +73,19 @@ Replicas:
 NAME                                     KIND        STATUS     AGE  INFO
 ⟳ media-proxy                            Rollout     ✔ Healthy  82s  
 ├──# revision:2                                                      
-│  └──⧉ media-proxy-c4b5f8b8b            ReplicaSet  ✔ Healthy  76s  stable
-│     ├──□ media-proxy-c4b5f8b8b-84djz   Pod         ✔ Running  76s  ready:1/1
-│     ├──□ media-proxy-c4b5f8b8b-k8qmn   Pod         ✔ Running  37s  ready:1/1
-│     └──□ media-proxy-c4b5f8b8b-sjbgm   Pod         ✔ Running  4s   ready:1/1
+│  └──⧉ media-proxy-c4b5f8b8b            ReplicaSet  ✔ Healthy  77s  stable
+│     ├──□ media-proxy-c4b5f8b8b-shz77   Pod         ✔ Running  77s  ready:1/1
+│     ├──□ media-proxy-c4b5f8b8b-z4ksh   Pod         ✔ Running  37s  ready:1/1
+│     └──□ media-proxy-c4b5f8b8b-7mdpw   Pod         ✔ Running  5s   ready:1/1
 └──# revision:1                                                      
-   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  82s  delay:28s
-      ├──□ media-proxy-5b9c644f5f-s9dzd  Pod         ✔ Running  82s  ready:1/1
-      ├──□ media-proxy-5b9c644f5f-66ssd  Pod         ✔ Running  81s  ready:1/1
-      └──□ media-proxy-5b9c644f5f-mptvg  Pod         ✔ Running  81s  ready:1/1
+   └──⧉ media-proxy-5b9c644f5f           ReplicaSet  ✔ Healthy  82s  delay:26s
+      ├──□ media-proxy-5b9c644f5f-cnwgg  Pod         ✔ Running  82s  ready:1/1
+      ├──□ media-proxy-5b9c644f5f-cs8dn  Pod         ✔ Running  82s  ready:1/1
+      └──□ media-proxy-5b9c644f5f-qh466  Pod         ✔ Running  82s  ready:1/1
 
-$ kubectl -n release-bay logs traffic-gen --tail=8
-server: envoy
-server: envoy
-server: envoy
-server: envoy
-server: envoy
-server: envoy
-server: envoy
-server: envoy
+$ kubectl -n release-bay logs traffic-gen --tail=8 | sort | uniq -c || true
+   1 nginx/1.25.5
+   7 nginx/1.26.3
 
 $ kubectl -n release-bay scale deploy media-proxy --replicas=0
 deployment.apps/media-proxy scaled
